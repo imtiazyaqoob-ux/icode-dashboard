@@ -1,0 +1,2866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iCode Glen Ellyn — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #21242f;
+    --border: #2d3142;
+    --border-light: #252838;
+    --text: #e8eaf0;
+    --text-muted: #8b90a8;
+    --text-dim: #565c78;
+    --accent: #6c7ef7;
+    --accent-blue: #60a5fa;
+    --accent-green: #34d399;
+    --accent-red: #f87171;
+    --accent-yellow: #fbbf24;
+    --accent-purple: #a78bfa;
+    --accent-teal: #5eead4;
+    --gauge-green: #34d399;
+    --gauge-yellow: #fbbf24;
+    --gauge-red: #f87171;
+    --shadow: 0 1px 4px rgba(0,0,0,0.3), 0 2px 12px rgba(0,0,0,0.2);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.4), 0 4px 24px rgba(0,0,0,0.3);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── LOGIN ── */
+  .login-screen {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999;
+  }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 44px 40px;
+    width: 400px;
+    box-shadow: var(--shadow-md);
+    text-align: center;
+  }
+  .login-logo {
+    width: 52px; height: 52px;
+    background: var(--accent);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 18px; color: #fff;
+    margin: 0 auto 20px;
+  }
+  .login-card h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .login-card p { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; }
+  .login-field { margin-bottom: 14px; text-align: left; }
+  .login-field label { display: block; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+  .login-field input {
+    width: 100%; padding: 10px 14px;
+    border: 1px solid var(--border); border-radius: 9px;
+    font-family: 'Inter', sans-serif; font-size: 14px;
+    color: var(--text); background: var(--surface2);
+    outline: none; transition: border-color 0.2s;
+  }
+  .login-field input:focus { border-color: var(--accent); background: var(--surface); }
+  .login-remember { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 13px; color: var(--text-muted); }
+  .login-btn {
+    width: 100%; padding: 11px; border: none; border-radius: 9px;
+    background: var(--accent); color: #fff;
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 15px;
+    cursor: pointer; transition: opacity 0.2s;
+  }
+  .login-btn:hover { opacity: 0.88; }
+  .login-btn:disabled { opacity: 0.5; cursor: default; }
+  .login-error { margin-top: 12px; font-size: 13px; color: var(--accent-red); min-height: 18px; }
+  .login-note { margin-top: 14px; font-size: 11px; color: var(--text-dim); }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 58px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-logo {
+    width: 34px; height: 34px;
+    background: var(--accent);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; color: #fff;
+  }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-subtitle { font-size: 12px; color: var(--text-muted); }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .header-date-range {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text-muted);
+  }
+  .header-date-range input {
+    border: 1px solid var(--border); border-radius: 7px;
+    padding: 5px 10px; font-size: 12px; color: var(--text);
+    background: var(--surface2); font-family: 'Inter', sans-serif;
+    outline: none;
+  }
+  .header-date-range span { color: var(--text-dim); }
+  .status-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 12px;
+    font-size: 12px; color: var(--text-muted);
+  }
+  .status-dot-sm {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent-green);
+  }
+  .status-dot-sm.loading { background: var(--accent-yellow); animation: blink 1s infinite; }
+  .status-dot-sm.error { background: var(--accent-red); animation: none; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .btn-refresh {
+    padding: 6px 14px; border-radius: 7px;
+    border: 1px solid var(--border); background: var(--surface2);
+    font-size: 12px; font-weight: 500; color: var(--text-muted);
+    cursor: pointer; transition: all 0.15s; font-family: 'Inter', sans-serif;
+  }
+  .btn-refresh:hover { border-color: var(--accent); color: var(--accent); background: #f0f1ff; }
+
+  /* ── SIDEBAR NAV ── */
+  .layout { display: flex; }
+  nav {
+    width: 200px; min-height: calc(100vh - 58px);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    flex-shrink: 0;
+    position: sticky; top: 58px; height: calc(100vh - 58px);
+    overflow-y: auto;
+  }
+  .nav-section-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--text-dim);
+    padding: 0 16px 8px;
+    margin-top: 16px;
+  }
+  .nav-section-label:first-child { margin-top: 0; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px; cursor: pointer;
+    font-size: 13px; font-weight: 500; color: var(--text-muted);
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+  }
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active {
+    color: var(--accent); background: #f0f1ff;
+    border-left-color: var(--accent);
+  }
+  .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+
+  /* ── MAIN ── */
+  main { flex: 1; padding: 24px 28px; overflow-x: hidden; }
+
+  /* ── STATES ── */
+  .state-panel {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 400px; gap: 14px;
+    color: var(--text-muted);
+  }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .page-title { font-size: 20px; font-weight: 700; }
+  .page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+  /* ── KPI CARDS ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+  .kpi-card-label {
+    font-size: 11px; font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .kpi-card-label .dots { font-size: 14px; color: var(--text-dim); cursor: pointer; }
+  .kpi-card-value {
+    font-size: 26px; font-weight: 700; letter-spacing: -0.5px;
+    line-height: 1.1; color: var(--text);
+  }
+  .kpi-card-value.null-val { color: var(--text-muted); }
+  .kpi-card-value.small { font-size: 20px; }
+
+  /* Gauge card */
+  .gauge-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .gauge-card-label {
+    font-size: 11px; font-weight: 500; color: var(--text-muted);
+    align-self: stretch;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .gauge-wrap { position: relative; width: 130px; height: 70px; overflow: hidden; }
+  .gauge-value {
+    font-size: 18px; font-weight: 700; text-align: center;
+    margin-top: 4px; color: var(--text);
+  }
+
+  /* ── CHART CARDS ── */
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+  }
+  .chart-card-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .chart-card-title { font-size: 13px; font-weight: 600; }
+  .chart-card-dots { color: var(--text-dim); cursor: pointer; font-size: 16px; }
+  .chart-legend {
+    display: flex; gap: 14px; flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--text-muted);
+  }
+  .legend-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+  .chart-wrap { position: relative; }
+  .chart-wrap.h220 { height: 220px; }
+  .chart-wrap.h280 { height: 280px; }
+  .chart-wrap.h320 { height: 320px; }
+  .chart-axis-label {
+    font-size: 11px; color: var(--text-muted);
+    text-align: center; margin-top: 4px;
+  }
+
+  /* ── TABLE CARD ── */
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .table-card-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .table-card-title { font-size: 13px; font-weight: 600; }
+  .table-card-meta { font-size: 12px; color: var(--text-muted); }
+  .table-wrap { overflow-x: auto; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    padding: 9px 14px;
+    text-align: left;
+    font-size: 12px; font-weight: 500;
+    color: var(--accent);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  thead th:hover { background: rgba(104,117,245,0.15); }
+  tbody tr { border-bottom: 1px solid var(--border-light); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg); }
+  tbody td { padding: 10px 14px; font-size: 13px; color: var(--text); }
+  tbody td.muted { color: var(--text-muted); font-size: 12px; }
+  .row-count-bar {
+    padding: 6px 20px;
+    font-size: 11px; color: var(--text-dim);
+    background: var(--surface2);
+    border-top: 1px solid var(--border-light);
+    text-align: right;
+  }
+
+  /* Filter row */
+  .filter-row {
+    padding: 12px 20px;
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .filter-row input, .filter-row select {
+    padding: 6px 10px; border: 1px solid var(--border);
+    border-radius: 7px; font-size: 12px; color: var(--text);
+    background: var(--surface2); font-family: 'Inter', sans-serif;
+    outline: none;
+  }
+  .filter-row input:focus, .filter-row select:focus { border-color: var(--accent); }
+  .filter-row input { min-width: 180px; }
+  .filter-spacer { flex: 1; }
+  .row-count { font-size: 11px; color: var(--text-muted); }
+
+  /* Pagination */
+  .pagination {
+    display: flex; align-items: center; justify-content: flex-end;
+    gap: 8px; padding: 10px 20px;
+    border-top: 1px solid var(--border-light);
+    font-size: 12px; color: var(--text-muted);
+  }
+  .pagination button {
+    padding: 4px 10px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--surface2);
+    font-size: 12px; cursor: pointer; color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .pagination button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .pagination button:disabled { opacity: 0.3; cursor: default; }
+
+  /* Badge */
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; border-radius: 12px;
+    font-size: 11px; font-weight: 500;
+  }
+  .badge.active { background: #dcfce7; color: #16a34a; }
+  .badge.inactive { background: #f3f4f6; color: var(--text-muted); }
+  .badge.success { background: #dcfce7; color: #16a34a; }
+  .badge.refund { background: #fee2e2; color: #dc2626; }
+  .badge.pending { background: #fef3c7; color: #d97706; }
+  .badge.new { background: #ede9fe; color: #a78bfa; }
+
+  /* ── SECTION DIVIDER ── */
+  .section-row {
+    display: grid; gap: 16px;
+    margin-bottom: 16px;
+  }
+  .section-row.two { grid-template-columns: 1fr 1fr; }
+  .section-row.three { grid-template-columns: 2fr 1fr 1fr; }
+
+  .hidden { display: none !important; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1200px) {
+    .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    .section-row.three { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 900px) {
+    nav { display: none; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .section-row.two, .section-row.three { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen" class="login-screen hidden">
+  <div class="login-card">
+    <div class="login-logo">iC</div>
+    <h2>iCode Glen Ellyn</h2>
+    <p>Sign in with your portal credentials</p>
+    <div class="login-field">
+      <label>Email / Username</label>
+      <input type="text" id="login-user" placeholder="your@email.com" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <div class="login-remember">
+      <input type="checkbox" id="login-remember" checked>
+      <label for="login-remember">Remember me on this computer</label>
+    </div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-note">Uses your portal.icodeschool.com credentials</div>
+  </div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="header-left">
+    <div class="header-logo">iC</div>
+    <div>
+      <div class="header-title">iCode Glen Ellyn</div>
+      <div class="header-subtitle">Operations Dashboard</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-date-range">
+      <span>From</span>
+      <input type="date" id="start-date">
+      <span>to</span>
+      <input type="date" id="end-date">
+    </div>
+    <div class="status-pill">
+      <div class="status-dot-sm loading" id="status-dot"></div>
+      <span id="status-text">Initializing...</span>
+    </div>
+    <button class="btn-refresh" onclick="loadAllData()">↺ Refresh</button>
+  </div>
+</header>
+
+<div class="layout">
+<!-- Sidebar Nav -->
+<nav>
+  <div class="nav-section-label">Analytics</div>
+  <div class="nav-item active" onclick="switchPage('revenue')" id="nav-revenue">
+    <span class="nav-icon">💰</span> Revenue
+  </div>
+  <div class="nav-item" onclick="switchPage('enrollments')" id="nav-enrollments">
+    <span class="nav-icon">🥋</span> Belts
+  </div>
+  <div class="nav-item" onclick="switchPage('camps')" id="nav-camps">
+    <span class="nav-icon">🏕️</span> Camps
+  </div>
+  <div class="nav-item" onclick="switchPage('ltv')" id="nav-ltv">
+    <span class="nav-icon">⭐</span> Lifetime Value
+  </div>
+
+  <div class="nav-section-label">Management</div>
+  <div class="nav-item" onclick="switchPage('transactions')" id="nav-transactions">
+    <span class="nav-icon">💳</span> Transactions
+  </div>
+  <div class="nav-item" onclick="switchPage('leads')" id="nav-leads">
+    <span class="nav-icon">🎯</span> Leads
+  </div>
+  <div class="nav-item" onclick="switchPage('families')" id="nav-families">
+    <span class="nav-icon">👨‍👩‍👧</span> Families
+  </div>
+</nav>
+
+<!-- Main Content -->
+<main>
+  <!-- Loading -->
+  <div id="loading-state" class="state-panel">
+    <div class="spinner"></div>
+    <p style="color:var(--text-muted)">Loading your dashboard...</p>
+  </div>
+
+  <!-- Error -->
+  <div id="error-state" class="state-panel hidden">
+    <p style="font-size:32px">⚠️</p>
+    <p id="error-msg" style="font-weight:600">Unable to connect to the API.</p>
+    <p id="error-sub" style="font-size:12px;color:var(--text-muted);max-width:500px;text-align:center"></p>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div id="dashboard-content" class="hidden">
+
+    <!-- ══ REVENUE PAGE ══ -->
+    <div id="page-revenue">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Revenue Overview</div>
+          <div class="page-subtitle">Financial performance and projections</div>
+        </div>
+      </div>
+      <!-- Shows when transaction data isn't available yet -->
+      <div id="revenue-api-notice" style="display:none;background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:18px;font-size:13px;color:#78350f">
+        <strong>⚠️ Revenue data requires a Public API Key</strong> — Student stats and lead data are loading normally.
+        To unlock revenue, enrollments, and transaction history, add your API key to <code style="background:#fde68a;padding:1px 5px;border-radius:4px">server.js</code>
+        (line 23) then restart. Find your key in <strong>Calimatic → Settings → Integrations → API Keys</strong>.
+        &nbsp;<a href="/debug" target="_blank" style="color:#92400e;font-weight:600">View API Debug →</a>
+      </div>
+
+      <!-- KPI Row 1: flat number cards -->
+      <div class="kpi-grid" id="revenue-kpi-grid">
+        <!-- Populated by JS -->
+      </div>
+      <!-- Gauge row — populated by JS, single instance -->
+      <div id="revenue-gauge-row" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;"></div>
+
+      <!-- Camp Revenue Timing Chart (also shown on Camps page) -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-title">Camp Revenue Timing</div>
+          <span class="chart-card-dots">···</span>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#8b7de8"></div>Enrollment Date</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#7ecec4"></div>Class Date</div>
+        </div>
+        <div class="chart-wrap h320">
+          <canvas id="camp-revenue-chart-revenue-page"></canvas>
+        </div>
+        <div class="chart-axis-label">Month</div>
+      </div>
+
+      <!-- Revenue History Line Chart -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-title">Revenue History</div>
+          <span class="chart-card-dots">···</span>
+        </div>
+        <div class="chart-legend" id="revenue-history-legend"></div>
+        <div class="chart-wrap h320">
+          <canvas id="revenue-history-chart"></canvas>
+        </div>
+        <div class="chart-axis-label">Month</div>
+      </div>
+    </div>
+
+    <!-- ══ ENROLLMENTS PAGE ══ -->
+    <div id="page-enrollments" class="hidden">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Belts</div>
+          <div class="page-subtitle">Belt classes, capacity, and enrollment status</div>
+        </div>
+      </div>
+
+      <!-- Enrollment vs Seating Capacity progress bar -->
+      <div class="chart-card" style="margin-bottom:16px">
+        <div class="chart-card-header">
+          <div class="chart-card-title">Enrollments vs Seating Capacity</div>
+          <span class="chart-card-dots">···</span>
+        </div>
+        <div id="belt-capacity-bar" style="padding:8px 0 16px"></div>
+      </div>
+
+      <!-- Belt Enrollment Summary table -->
+      <div class="table-card">
+        <div class="table-card-header">
+          <div class="table-card-title">Belt Enrollment Summary</div>
+          <span class="chart-card-dots">···</span>
+        </div>
+        <div class="filter-row">
+          <input type="text" id="enroll-search" placeholder="Search belt or session..." oninput="filterEnrollments()">
+          <select id="enroll-status-filter" onchange="filterEnrollments()">
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <div class="filter-spacer"></div>
+          <button onclick="toggleAllBelts()" id="enroll-expand-btn" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:inherit">Collapse All</button>
+          <span class="row-count" id="enroll-count"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="cursor:pointer" onclick="sortTable('enrollments','className')">Belt / Session ↕</th>
+                <th>Schedule</th>
+                <th onclick="sortTable('enrollments','startDate')" style="cursor:pointer">Start Date ↕</th>
+                <th onclick="sortTable('enrollments','endDate')" style="cursor:pointer">End Date ↕</th>
+                <th onclick="sortTable('enrollments','activeCount')" style="cursor:pointer;text-align:center">Enrolled ↕</th>
+                <th onclick="sortTable('enrollments','capacity')" style="cursor:pointer;text-align:center">Capacity ↕</th>
+                <th style="text-align:right">Rev / Mo</th>
+              </tr>
+            </thead>
+            <tbody id="enrollments-table"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="enroll-pagination"></div>
+        <div class="row-count-bar" id="enroll-row-count"></div>
+      </div>
+    </div>
+
+    <!-- ══ CAMPS PAGE ══ -->
+    <div id="page-camps" class="hidden">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Camps</div>
+          <div class="page-subtitle">Camp sales, enrollment dates, and payment schedule</div>
+        </div>
+      </div>
+
+      <!-- Camp Revenue Timing Chart -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-title">Camp Revenue Timing</div>
+          <span class="chart-card-dots">···</span>
+        </div>
+        <div class="chart-wrap h300">
+          <canvas id="camp-revenue-chart"></canvas>
+        </div>
+        <div class="chart-axis-label">Month</div>
+      </div>
+
+      <!-- Camp Enrollments vs Capacity progress bar -->
+      <div class="chart-card" style="margin-top:16px">
+        <div class="chart-card-header">
+          <div class="chart-card-title">Camp Enrollments vs Capacity</div>
+          <span class="chart-card-dots">···</span>
+        </div>
+        <div id="camp-capacity-bar" style="padding:8px 0 16px"></div>
+      </div>
+
+      <!-- Camp Sessions table (one row per session, like screenshot) -->
+      <div class="table-card" style="margin-top:16px">
+        <div class="table-card-header">
+          <div class="table-card-title">Camp Enrollments — by Session</div>
+          <span class="chart-card-dots">···</span>
+        </div>
+        <div class="filter-row">
+          <input type="text" id="camp-session-search" placeholder="Search camp name..." oninput="filterCampSessions()">
+          <select id="camp-session-timing" onchange="filterCampSessions()">
+            <option value="">All Timing</option>
+          </select>
+          <select id="camp-session-year" onchange="filterCampSessions()">
+            <option value="">All Years</option>
+          </select>
+          <div class="filter-spacer"></div>
+          <span class="row-count" id="camp-session-count"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th onclick="sortCampSessions('name')" style="cursor:pointer">Name ↕</th>
+                <th onclick="sortCampSessions('timing')" style="cursor:pointer">Timing ↕</th>
+                <th onclick="sortCampSessions('startDate')" style="cursor:pointer">Start Date ↕</th>
+                <th onclick="sortCampSessions('endDate')" style="cursor:pointer">End Date ↕</th>
+                <th onclick="sortCampSessions('enrollmentCount')" style="cursor:pointer;text-align:center">Enrollment Count ↕</th>
+                <th onclick="sortCampSessions('capacity')" style="cursor:pointer;text-align:center">Capacity ↕</th>
+              </tr>
+            </thead>
+            <tbody id="camp-sessions-table"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="camp-sessions-pagination"></div>
+        <div class="row-count-bar" id="camp-sessions-row-count"></div>
+      </div>
+
+      <!-- Camp Sales Table -->
+      <div class="table-card" style="margin-top:16px">
+        <div class="table-card-header">
+          <div class="table-card-title">Camp Sales</div>
+          <span class="chart-card-dots">···</span>
+        </div>
+        <div class="filter-row">
+          <input type="text" id="camps-search" placeholder="Search camp, student, parent..." oninput="filterCamps()">
+          <select id="camps-year-filter" onchange="filterCamps()">
+            <option value="">All Years</option>
+          </select>
+          <select id="camps-name-filter" onchange="filterCamps()">
+            <option value="">All Camps</option>
+          </select>
+          <div class="filter-spacer"></div>
+          <span class="row-count" id="camps-count"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th onclick="sortCamps('eventName')" style="cursor:pointer">Camp Name ↕</th>
+                <th onclick="sortCamps('eventStartDate')" style="cursor:pointer">Camp Dates ↕</th>
+                <th onclick="sortCamps('studentName')" style="cursor:pointer">Student ↕</th>
+                <th onclick="sortCamps('contactName')" style="cursor:pointer">Parent ↕</th>
+                <th onclick="sortCamps('enrolledDate')" style="cursor:pointer">Purchase Date ↕</th>
+                <th style="text-align:right">Deposit</th>
+                <th style="text-align:right">Total</th>
+                <th onclick="sortCamps('paymentDate')" style="cursor:pointer">Balance Due Date ↕</th>
+                <th style="text-align:right">Balance Due</th>
+              </tr>
+            </thead>
+            <tbody id="camps-table"></tbody>
+            <tfoot id="camps-tfoot"></tfoot>
+          </table>
+        </div>
+        <div class="pagination" id="camps-pagination"></div>
+        <div class="row-count-bar" id="camps-row-count"></div>
+      </div>
+    </div>
+
+    <!-- ══ LIFETIME VALUE PAGE ══ -->
+    <div id="page-ltv" class="hidden">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Lifetime Value</div>
+          <div class="page-subtitle">Total revenue per student, all-time</div>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid" id="ltv-kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px"></div>
+
+      <!-- Two side-by-side tables -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+        <!-- All Students LTV -->
+        <div class="table-card" style="margin-bottom:0">
+          <div class="table-card-header">
+            <div class="table-card-title">LTV Per Student</div>
+            <span class="chart-card-dots">···</span>
+          </div>
+          <div class="filter-row">
+            <input type="text" id="ltv-search" placeholder="Search student..." oninput="filterLTV()">
+            <select id="ltv-sort" onchange="filterLTV()">
+              <option value="name">A – Z</option>
+              <option value="desc">Highest First</option>
+              <option value="asc">Lowest First</option>
+            </select>
+            <span class="row-count" id="ltv-count"></span>
+          </div>
+          <div class="table-wrap" style="max-height:520px;overflow-y:auto">
+            <table>
+              <thead><tr>
+                <th style="position:sticky;top:0;background:var(--surface)">Student</th>
+                <th style="position:sticky;top:0;background:var(--surface);text-align:right">Lifetime Value</th>
+                <th style="position:sticky;top:0;background:var(--surface);text-align:center">Transactions</th>
+              </tr></thead>
+              <tbody id="ltv-table"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Belt Students LTV -->
+        <div class="table-card" style="margin-bottom:0">
+          <div class="table-card-header">
+            <div class="table-card-title">LTV Per Student — Belt Students</div>
+            <span class="chart-card-dots">···</span>
+          </div>
+          <div class="filter-row">
+            <input type="text" id="ltv-belt-search" placeholder="Search student..." oninput="filterLTVBelt()">
+            <select id="ltv-belt-sort" onchange="filterLTVBelt()">
+              <option value="desc">Highest First</option>
+              <option value="name">A – Z</option>
+              <option value="asc">Lowest First</option>
+            </select>
+            <span class="row-count" id="ltv-belt-count"></span>
+          </div>
+          <div class="table-wrap" style="max-height:520px;overflow-y:auto">
+            <table>
+              <thead><tr>
+                <th style="position:sticky;top:0;background:var(--surface)">Student</th>
+                <th style="position:sticky;top:0;background:var(--surface);text-align:right">Lifetime Value</th>
+                <th style="position:sticky;top:0;background:var(--surface);text-align:center">Transactions</th>
+              </tr></thead>
+              <tbody id="ltv-belt-table"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ TRANSACTIONS PAGE ══ -->
+    <div id="page-transactions" class="hidden">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Transactions</div>
+          <div class="page-subtitle">Payment history and refunds</div>
+        </div>
+      </div>
+      <div class="section-row two">
+        <div class="chart-card" style="margin-bottom:0">
+          <div class="chart-card-header">
+            <div class="chart-card-title">Monthly Revenue</div>
+            <span class="chart-card-dots">···</span>
+          </div>
+          <div class="chart-wrap h220">
+            <canvas id="revenue-chart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card" style="margin-bottom:0">
+          <div class="chart-card-header">
+            <div class="chart-card-title">Payment Methods</div>
+            <span class="chart-card-dots">···</span>
+          </div>
+          <div class="chart-wrap h220">
+            <canvas id="payment-method-chart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="table-card" style="margin-top:16px">
+        <div class="table-card-header">
+          <div class="table-card-title">Transaction History</div>
+          <span class="chart-card-dots">···</span>
+        </div>
+        <div class="filter-row">
+          <input type="text" id="txn-search" placeholder="Search student, class..." oninput="filterTransactions()">
+          <select id="txn-type-filter" onchange="filterTransactions()">
+            <option value="">All Types</option>
+            <option value="Classes">Classes</option>
+            <option value="Camps">Camps</option>
+            <option value="Events">Events</option>
+          </select>
+          <div class="filter-spacer"></div>
+          <span class="row-count" id="txn-count"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th><th>Student</th><th>Contact</th><th>Class / Event</th>
+                <th>Amount</th><th>Method</th><th>Enrollment Type</th><th>Transaction Type</th>
+              </tr>
+            </thead>
+            <tbody id="transactions-table"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="txn-pagination"></div>
+      </div>
+    </div>
+
+    <!-- ══ LEADS PAGE ══ -->
+    <div id="page-leads" class="hidden">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Leads</div>
+          <div class="page-subtitle">Prospects and inquiries</div>
+        </div>
+      </div>
+      <div class="section-row two">
+        <div class="chart-card" style="margin-bottom:0">
+          <div class="chart-card-header">
+            <div class="chart-card-title">Leads by Status</div>
+            <span class="chart-card-dots">···</span>
+          </div>
+          <div class="chart-wrap h220"><canvas id="leads-status-chart"></canvas></div>
+        </div>
+        <div class="chart-card" style="margin-bottom:0">
+          <div class="chart-card-header">
+            <div class="chart-card-title">Leads by Source</div>
+            <span class="chart-card-dots">···</span>
+          </div>
+          <div class="chart-wrap h220"><canvas id="leads-source-chart"></canvas></div>
+        </div>
+      </div>
+      <div class="table-card" style="margin-top:16px">
+        <div class="table-card-header">
+          <div class="table-card-title">All Leads</div>
+          <span class="chart-card-dots">···</span>
+        </div>
+        <div class="filter-row">
+          <input type="text" id="leads-search" placeholder="Search name, email..." oninput="filterLeads()">
+          <select id="leads-status-filter" onchange="filterLeads()"><option value="">All Statuses</option></select>
+          <div class="filter-spacer"></div>
+          <span class="row-count" id="leads-count"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Source</th><th>Type</th><th>Created</th></tr></thead>
+            <tbody id="leads-table"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="leads-pagination"></div>
+      </div>
+    </div>
+
+    <!-- ══ FAMILIES PAGE ══ -->
+    <div id="page-families" class="hidden">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Families</div>
+          <div class="page-subtitle">Registered families at Glen Ellyn</div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-card-header">
+          <div class="table-card-title">All Families</div>
+          <span class="chart-card-dots">···</span>
+        </div>
+        <div class="filter-row">
+          <input type="text" id="families-search" placeholder="Search family, email..." oninput="filterFamilies()">
+          <div class="filter-spacer"></div>
+          <span class="row-count" id="families-count"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Family Name</th><th>Contact</th><th>Email</th><th>Phone</th><th>City</th><th>State</th></tr></thead>
+            <tbody id="families-table"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="families-pagination"></div>
+      </div>
+    </div>
+
+  </div><!-- /dashboard-content -->
+</main>
+</div><!-- /layout -->
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+const CONFIG = {
+  apiKey: 'RjIwMjYyNjAyMTcxOTE0XjE5NyBHbGVuIEVsbHlu',
+  domain: 'portal.icodeschool.com',
+  baseUrl: '/api',
+  companyId: 197
+};
+const FRANCHISE_ID = 67;
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+const state = {
+  enrollments: [], transactions: [], leads: [], families: [], classes: [], stats: null,
+  filteredEnrollments: [], filteredTransactions: [], filteredLeads: [], filteredFamilies: [], filteredCamps: [],
+  futurePayments: [],
+  pages: { enrollments: 1, transactions: 1, leads: 1, families: 1, camps: 1, campSessions: 1 },
+  pageSize: 20,
+  charts: {},
+  sortConfig: { enrollments: { key: 'startDate', dir: -1 } },
+  currentPage: 'revenue',
+  expandedBelts: new Set(),   // tracks which belt names are expanded
+  allBeltsExpanded: true,
+};
+
+// ─── DATE SETUP ───────────────────────────────────────────────────────────────
+function setupDates() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth()+1).padStart(2,'0');
+  const d = String(now.getDate()).padStart(2,'0');
+  document.getElementById('start-date').value = `${y}-01-01`;
+  document.getElementById('end-date').value = `${y}-${m}-${d}`;
+}
+function getDateRange() {
+  return {
+    start: document.getElementById('start-date').value + 'T00:00:00Z',
+    end: document.getElementById('end-date').value + 'T23:59:59Z'
+  };
+}
+
+// ─── API ─────────────────────────────────────────────────────────────────────
+// ─── API HELPERS ─────────────────────────────────────────────────────────────
+// Bearer-token proxy route (confirmed working: Student/stats, Lead/GetLeads)
+async function apiGet(endpoint, params = {}) {
+  const url = new URL(window.location.origin + '/api/' + endpoint);
+  Object.entries(params).forEach(([k, v]) => { if (v !== undefined) url.searchParams.set(k, v); });
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error('HTTP ' + res.status + ' on ' + endpoint);
+  const data = await res.json();
+  return unwrap(data);
+}
+
+// PublicAPI proxy route — uses pipe-format apikey header on server side
+async function pubGet(endpoint, params = {}) {
+  const url = new URL(window.location.origin + '/pub/' + endpoint);
+  Object.entries(params).forEach(([k, v]) => { if (v !== undefined) url.searchParams.set(k, v); });
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error('HTTP ' + res.status + ' on PublicAPI/' + endpoint);
+  const data = await res.json();
+  return unwrap(data);
+}
+
+function unwrap(data) {
+  const r = data.response ?? data.Response ?? data.data ?? data.Data ?? data;
+  if (Array.isArray(r)) return r;
+  if (r && typeof r === 'object') {
+    const arr = r.items || r.Items || r.records || r.Records || r.list || r.List;
+    if (Array.isArray(arr)) return arr;
+    return r; // stats object or single record object
+  }
+  return [];
+}
+
+// ─── LOAD DATA ────────────────────────────────────────────────────────────────
+async function loadAllData() {
+  setStatus('loading', 'Connecting...');
+  show('loading-state'); hide('error-state'); hide('dashboard-content');
+
+  // Hard timeout — never spin forever
+  const loadTimeout = setTimeout(() => {
+    hide('loading-state'); show('error-state');
+    document.getElementById('error-msg').textContent = 'Loading timed out.';
+    document.getElementById('error-sub').textContent = 'Make sure the server is running, then refresh.';
+    setStatus('error', 'Timed out');
+  }, 30000);
+
+  try {
+    const statusRes = await fetch('/status');
+    const status = await statusRes.json();
+    if (!status.authenticated) {
+      clearTimeout(loadTimeout);
+      hide('loading-state'); show('login-screen');
+      setStatus('error', 'Not logged in'); return;
+    }
+  } catch(e) {
+    clearTimeout(loadTimeout);
+    hide('loading-state'); show('error-state');
+    document.getElementById('error-msg').textContent = 'Cannot reach server.';
+    document.getElementById('error-sub').textContent = 'Make sure node server.js is running on port 3000.';
+    setStatus('error', 'Server unreachable'); return;
+  }
+
+  try {
+    // ── CONFIRMED WORKING: bearer token endpoints ──────────────────────────
+    const statsRaw = await apiGet('Student/stats', { franchiseIds: FRANCHISE_ID }).catch(() => null);
+    state.stats = (statsRaw && !Array.isArray(statsRaw)) ? statsRaw : null;
+    console.log('✅ Stats:', state.stats);
+
+    state.leads = await apiGet('Lead/GetLeads', { franchiseIds: FRANCHISE_ID }).catch(() => []);
+    console.log(`✅ Leads: ${state.leads.length}`);
+
+    // ── PublicAPI endpoints ─────────────────────────────────────────────────
+    // IMPORTANT: Always fetch 2 full years for KPI year-over-year comparisons.
+    // The date picker only filters the Transactions TABLE view, not the data fetch.
+    const now       = new Date();
+    const thisYear  = now.getFullYear();
+    const fetchStart = (thisYear - 1) + '-01-01';   // Jan 1 last year
+    const fetchEnd   = (thisYear + 1) + '-12-31';   // Dec 31 next year (catch scheduled)
+
+    const [enrollRes, classRes, txnRes, futureRes] = await Promise.allSettled([
+      pubGet('PublicAPI/GetAllStudentEnrollments', { enrollmentType: 0 }),
+      pubGet('PublicAPI/GetClassesDetailsInfo', { CampusId: FRANCHISE_ID }),
+      pubGet('PublicAPI/GetTransactionHistory', { franchiseIds: FRANCHISE_ID, startDate: fetchStart, endDate: fetchEnd }),
+      pubGet('PublicAPI/GetFutureRecurringPayments', { companyId: FRANCHISE_ID }),
+    ]);
+
+    state.enrollments      = enrollRes.status  === 'fulfilled' && Array.isArray(enrollRes.value)  ? enrollRes.value  : [];
+    state.classes          = classRes.status   === 'fulfilled' && Array.isArray(classRes.value)   ? classRes.value   : [];
+    state.transactions     = txnRes.status     === 'fulfilled' && Array.isArray(txnRes.value)     ? txnRes.value     : [];
+    state.futurePayments   = futureRes.status  === 'fulfilled' && Array.isArray(futureRes.value)  ? futureRes.value  :
+                             futureRes.status  === 'fulfilled' && futureRes.value?.response        ? futureRes.value.response : [];
+    state.families         = [];
+
+    console.log(`📊 enrollments:${state.enrollments.length} classes:${state.classes.length} txns:${state.transactions.length} future:${state.futurePayments.length} leads:${state.leads.length}`);
+    if (enrollRes.status  === 'rejected') console.warn('Enrollments failed:',     enrollRes.reason?.message);
+    if (classRes.status   === 'rejected') console.warn('Classes failed:',         classRes.reason?.message);
+    if (txnRes.status     === 'rejected') console.warn('Transactions failed:',    txnRes.reason?.message);
+    if (futureRes.status  === 'rejected') console.warn('Future payments failed:', futureRes.reason?.message);
+    else console.log('🔮 Future[0]:', JSON.stringify((state.futurePayments||[])[0]).substring(0, 400));
+    if (state.transactions.length > 0) console.log('🔍 Txn[0]:', JSON.stringify(state.transactions[0]).substring(0, 500));
+    if (state.enrollments.length > 0) console.log('🔍 Enroll[0]:', JSON.stringify(state.enrollments[0]).substring(0, 500));
+    if (state.classes.length > 0) console.log('🔍 Class[0]:', JSON.stringify(state.classes[0]).substring(0, 300));
+
+    // We always have stats, so always show dashboard
+    clearTimeout(loadTimeout);
+    renderDashboard();
+    const notice = document.getElementById('revenue-api-notice');
+    if (notice) notice.style.display = state.transactions.length === 0 ? 'block' : 'none';
+    setStatus('live', 'Updated ' + new Date().toLocaleTimeString());
+    hide('loading-state'); hide('error-state'); show('dashboard-content');
+  } catch(err) {
+    clearTimeout(loadTimeout);
+    console.error(err);
+    hide('loading-state'); show('error-state');
+    document.getElementById('error-msg').textContent = 'Could not load data from Calimatic API.';
+    document.getElementById('error-sub').textContent = err.message;
+    setStatus('error', 'Connection failed');
+  }
+}
+
+// ─── RENDER ALL ───────────────────────────────────────────────────────────────
+function safeRun(name, fn) {
+  try { fn(); } catch(e) { console.error('❌ ' + name + ':', e.message, e); }
+}
+
+function renderDashboard() {
+  safeRun('renderRevenueKPIs',         renderRevenueKPIs);
+  safeRun('renderRevenueHistoryChart', renderRevenueHistoryChart);
+  safeRun('renderCampRevenueChart',    renderCampRevenueChart);
+  safeRun('renderEnrollmentCharts',    renderEnrollmentCharts);
+  safeRun('renderTransactionCharts',   renderTransactionCharts);
+  safeRun('renderLeadCharts',          renderLeadCharts);
+  safeRun('renderEnrollmentsTable',    renderEnrollmentsTable);
+  safeRun('renderTransactionsTable',   renderTransactionsTable);
+  safeRun('renderLeadsTable',          renderLeadsTable);
+  safeRun('renderFamiliesTable',       renderFamiliesTable);
+  safeRun('populateLeadStatusFilter',  populateLeadStatusFilter);
+  safeRun('populateTxnTypeFilter',     populateTxnTypeFilter);
+  safeRun('populateEnrollStatusFilter',populateEnrollStatusFilter);
+  safeRun('renderCampsTable',          renderCampsTable);
+  safeRun('renderCampSessions',        renderCampSessions);
+  safeRun('renderLTV',                 renderLTV);
+}
+
+function populateTxnTypeFilter() {
+  const types = [...new Set(state.transactions.map(t => t.enrollmentTypeName).filter(Boolean))].sort();
+  const sel = document.getElementById('txn-type-filter');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">All Types</option>' + types.map(t => `<option value="${t}">${t}</option>`).join('');
+}
+
+function populateEnrollStatusFilter() {
+  const sel = document.getElementById('enroll-status-filter');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">All</option><option value="active">Active</option><option value="inactive">Inactive</option>';
+}
+
+// ─── REVENUE KPIs (matching screenshot 2 layout) ─────────────────────────────
+// ── CONFIRMED field names from GetTransactionHistory ─────────────────────────
+// studentName, contactName, familyName, enrollmentTypeName, paymentTransactionTypeName,
+// transactionType, transactionDate, className, eventName, feeName,
+// amountPaid, totalAmount, refundAmount, isRefund, paymentMethod, balance, discountAmount
+function getTxnAmount(t) { return t.isRefund ? -(t.refundAmount || t.amountPaid || 0) : (t.amountPaid || 0); }
+function getTxnDate(t)   { return t.transactionDate || null; }
+function isRefundTxn(t)  { return !!t.isRefund; }
+
+function renderRevenueKPIs() {
+  const txns   = state.transactions;
+  const hasTxn = txns.length > 0;
+  if (hasTxn) console.log('💰 Transactions loaded:', txns.length, '| Sample:', JSON.stringify(txns[0]).substring(0, 200));
+
+  const payments = txns.filter(t => !t.isRefund);
+  const refunds  = txns.filter(t =>  t.isRefund);
+  const now       = new Date();
+  const thisYear  = now.getFullYear();
+  const thisMonth = now.getMonth();
+
+  const txnDate = t => t.transactionDate ? new Date(t.transactionDate) : null;
+  const amt     = t => t.amountPaid || 0;
+
+  // ── YTD: Jan 1 this year → today ──
+  const ytdPayments = payments.filter(t => {
+    const d = txnDate(t); return d && d.getFullYear() === thisYear && d <= now;
+  });
+  const ytdTotal = ytdPayments.reduce((s,t) => s + amt(t), 0);
+
+  // ── YTD Refunds ──
+  const ytdRefunds = refunds.filter(t => {
+    const d = txnDate(t); return d && d.getFullYear() === thisYear && d <= now;
+  });
+  const ytdRefundTotal = ytdRefunds.reduce((s,t) => s + (t.refundAmount || t.amountPaid || 0), 0);
+  const ytdNet = ytdTotal - ytdRefundTotal;
+
+  // ── Prior Year Same Period: Jan 1 last year → same date last year ──
+  const sameDay     = new Date(thisYear-1, now.getMonth(), now.getDate(), 23, 59, 59);
+  const priorPayments = payments.filter(t => {
+    const d = txnDate(t);
+    return d && d.getFullYear() === thisYear-1 && d <= sameDay;
+  });
+  const priorTotal = priorPayments.reduce((s,t) => s + amt(t), 0);
+
+  // ── Last Year Full Total ──
+  const lastYearPayments = payments.filter(t => {
+    const d = txnDate(t); return d && d.getFullYear() === thisYear-1;
+  });
+  const lastYearTotal = lastYearPayments.reduce((s,t) => s + amt(t), 0);
+
+  // ── Scheduled (future payments) ──
+  // Primary source: GetFutureRecurringPayments API
+  // Fallback: enrollments where paymentDate is future and there is a remaining balance
+  const futurePayments = state.futurePayments || [];
+  const getFutureAmt   = p => p.amount || p.Amount || p.amountDue || p.AmountDue ||
+                              p.totalAmount || p.TotalAmount || p.dueAmount || 0;
+
+  let scheduledTotal = 0;
+  let scheduled      = [];
+
+  // CONFIRMED structure from debug:
+  // Each record: { shoppingCartId, userName, className, recurringType, intervals: [...] }
+  // Each interval: { dueDate, pendingAmount, intervalCycle, paymentStatus }
+  // "Scheduled" = all pending intervals across all records with a future dueDate
+
+  if (futurePayments.length > 0) {
+    // Flatten all intervals from all records, filter to Pending + future date
+    const allIntervals = [];
+    futurePayments.forEach(p => {
+      (p.intervals || []).forEach(iv => {
+        if ((iv.paymentStatus || '').toLowerCase() === 'pending') {
+          const due = new Date(iv.dueDate);
+          allIntervals.push({
+            student:   p.userName  || '',
+            className: p.className || '',
+            dueDate:   iv.dueDate,
+            amount:    iv.pendingAmount || 0,
+            cycle:     iv.intervalCycle || '',
+            isPast:    !isNaN(due.getTime()) && due < now,
+          });
+        }
+      });
+    });
+    // Total = ALL pending (past-due + upcoming) — gives full obligation picture
+    scheduledTotal = allIntervals.reduce((s, iv) => s + iv.amount, 0);
+    scheduled      = allIntervals;
+    const upcoming = allIntervals.filter(iv => !iv.isPast);
+    console.log(`🔮 Future payments: ${futurePayments.length} enrollments, ${allIntervals.length} pending intervals, $${scheduledTotal.toFixed(0)} total ($${upcoming.reduce((s,iv)=>s+iv.amount,0).toFixed(0)} upcoming)`);
+  }
+
+  // ── Current Month (all payments this calendar month, past + future) ──
+  const curMonthPmts = payments.filter(t => {
+    const d = txnDate(t);
+    return d && d.getFullYear() === thisYear && d.getMonth() === thisMonth;
+  });
+  const curMonthTotal = curMonthPmts.reduce((s,t) => s + amt(t), 0);
+
+  // ── Full Year Projection: extrapolate YTD ──
+  const dayOfYear = Math.ceil((now - new Date(thisYear, 0, 0)) / 86400000);
+  const fullYearProjection = dayOfYear > 0 ? ytdTotal * (365 / dayOfYear) : 0;
+
+  // ── Pace & Growth gauges ──
+  const pacePct  = priorTotal  > 0 ? ((ytdTotal  - priorTotal)  / priorTotal  * 100) : null;
+  const growthPct= lastYearTotal > 0 ? ((fullYearProjection - lastYearTotal) / lastYearTotal * 100) : null;
+
+  // Debug log so we can verify
+  console.log(`💰 KPIs | YTD:$${ytdTotal.toFixed(0)} Prior:$${priorTotal.toFixed(0)} LastYr:$${lastYearTotal.toFixed(0)} Sched:$${scheduledTotal.toFixed(0)} CurMo:$${curMonthTotal.toFixed(0)}`);
+
+  // ── Student stats ──
+  const stats   = state.stats || {};
+  const active  = stats.activeStudents   ?? '—';
+  const enrolled= stats.enrolledStudents ?? '—';
+  const total   = stats.totalStudents    ?? '—';
+
+  const kpis = [
+    { label: 'YTD Revenue',             value: '$' + fmtDollars(ytdNet),      sub: ytdRefundTotal > 0 ? `$${fmtDollars(ytdTotal)} collected · $${fmtDollars(ytdRefundTotal)} refunded` : null },
+    { label: 'Prior Year Same Period',  value: priorTotal > 0 ? '$' + fmtDollars(priorTotal) : '—', sub: priorTotal > 0 ? `Jan 1 – ${now.toLocaleDateString('en-US',{month:'short',day:'numeric'})}, ${thisYear-1}` : `No ${thisYear-1} data in range` },
+    { label: 'Current Month Revenue',  value: '$' + fmtDollars(curMonthTotal), sub: now.toLocaleString('en-US',{month:'long',year:'numeric'}) },
+    { label: 'Scheduled (Future)',      value: scheduledTotal > 0 ? '$' + fmtDollars(scheduledTotal) : '—',
+      sub: scheduledTotal > 0 ? scheduled.length + ' payments scheduled' : 'No scheduled payments found' },
+    { label: 'Last Year Total',         value: lastYearTotal > 0 ? '$' + fmtDollars(lastYearTotal) : '—', sub: lastYearTotal > 0 ? `Full year ${thisYear-1}` : `No ${thisYear-1} data in range` },
+    { label: 'Active Students',         value: String(active), sub: `${enrolled} enrolled · ${total} total` },
+  ];
+
+  const grid = document.getElementById('revenue-kpi-grid');
+  grid.innerHTML = kpis.map(k => `
+    <div class="kpi-card">
+      <div class="kpi-card-label">${k.label} <span class="dots">···</span></div>
+      <div class="kpi-card-value">${k.value}</div>
+      ${k.sub ? `<div style="font-size:11px;color:var(--text-dim);margin-top:4px">${k.sub}</div>` : ''}
+    </div>
+  `).join('');
+
+  // ── Gauge / projection row (single static div in HTML, no duplication) ──
+  const gaugeData = [
+    { id: 'gauge-pace',   label: 'YTD Pace vs Prior Year',        pct: pacePct,   range: [-50, 50], zones: [-15, 15] },
+    { id: 'gauge-fullyr', label: 'Full Year Projection',           value: '$' + fmtDollars(fullYearProjection) },
+    { id: 'gauge-priorgo',label: 'Prior Year Go-Forward +15%',     value: priorTotal > 0 ? '$' + fmtDollars(priorTotal * 1.15) : lastYearTotal > 0 ? '$' + fmtDollars(lastYearTotal * (dayOfYear/365) * 1.15) : '—' },
+    { id: 'gauge-growth', label: 'Projected Growth vs Last Year',  pct: growthPct, range: [-20, 20], zones: [-5, 5] },
+  ];
+
+  const gaugeRow = document.getElementById('revenue-gauge-row');
+  gaugeRow.innerHTML = gaugeData.map(g => {
+    if (g.pct !== undefined) {
+      return `<div class="gauge-card">
+        <div class="gauge-card-label">${g.label} <span class="dots">···</span></div>
+        <canvas id="${g.id}" style="display:block;margin:4px auto 0"></canvas>
+        <div class="gauge-value">${g.pct.toFixed(2)}%</div>
+      </div>`;
+    } else {
+      return `<div class="gauge-card" style="justify-content:space-between">
+        <div class="gauge-card-label">${g.label} <span class="dots">···</span></div>
+        <div style="font-size:22px;font-weight:700;color:var(--text);padding:12px 0 8px">${g.value}</div>
+      </div>`;
+    }
+  }).join('');
+
+  // Draw gauges after DOM paint
+  setTimeout(() => {
+    gaugeData.forEach(g => {
+      if (g.pct !== undefined) drawGauge(g.id, g.pct, g.range, g.zones);
+    });
+  }, 50);
+}
+
+function drawGauge(canvasId, pct, range, zones) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) { console.warn('Gauge canvas not found:', canvasId); return; }
+  // Size the canvas to fill its card
+  const cardW = canvas.parentElement ? canvas.parentElement.clientWidth : 200;
+  const W = Math.max(cardW - 32, 140);
+  const H = Math.round(W * 0.52);
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const cx = W / 2, cy = H - 6;
+  const r = W * 0.38;
+  const startAngle = Math.PI;
+  const endAngle = 0;
+
+  // Normalize pct to 0–1 in the range
+  const [rMin, rMax] = range;
+  const [zMin, zMax] = zones;
+  const total = rMax - rMin;
+  const normalizeAngle = v => startAngle + (Math.PI * (v - rMin) / total);
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Draw colored arc segments: red → yellow → green → yellow → red
+  const segments = [
+    { from: rMin, to: zMin, color: '#f87171' },
+    { from: zMin, to: 0, color: '#facc15' },
+    { from: 0, to: zMax, color: '#4ade80' },
+    { from: zMax, to: rMax, color: '#facc15' },
+    // only add far right red if needed
+  ];
+  // Actually use 3-zone: red/yellow/green/yellow/red
+  const arcSegs = [
+    { from: rMin, to: zMin, color: '#f87171' },
+    { from: zMin, to: zMax, color: '#4ade80' },
+    { from: zMax, to: rMax, color: '#f87171' },
+  ];
+
+  arcSegs.forEach(seg => {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, normalizeAngle(seg.from), normalizeAngle(seg.to));
+    ctx.strokeStyle = seg.color;
+    ctx.lineWidth = 14;
+    ctx.lineCap = 'butt';
+    ctx.stroke();
+  });
+
+  // Range labels
+  ctx.fillStyle = '#9ca3af';
+  ctx.font = '9px Inter, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(rMin + '%', cx - r - 4, cy + 2);
+  ctx.textAlign = 'left';
+  ctx.fillText(rMax + '%', cx + r + 4, cy + 2);
+  ctx.textAlign = 'center';
+  ctx.fillText('0', cx, cy - r + 12);
+
+  // Zone labels
+  const z1x = cx + r * Math.cos(normalizeAngle(zMin));
+  const z1y = cy + r * Math.sin(normalizeAngle(zMin));
+  const z2x = cx + r * Math.cos(normalizeAngle(zMax));
+  const z2y = cy + r * Math.sin(normalizeAngle(zMax));
+  ctx.fillStyle = '#6b7280';
+  ctx.font = '8px Inter, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(zMin + '%', z1x - 2, z1y - 4);
+  ctx.textAlign = 'left';
+  ctx.fillText(zMax + '%', z2x + 2, z2y - 4);
+
+  // Needle
+  const clampedPct = Math.max(rMin, Math.min(rMax, pct));
+  const needleAngle = normalizeAngle(clampedPct);
+  const nx = cx + (r - 6) * Math.cos(needleAngle);
+  const ny = cy + (r - 6) * Math.sin(needleAngle);
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(nx, ny);
+  ctx.strokeStyle = '#374151';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Center dot
+  ctx.beginPath();
+  ctx.arc(cx, cy, 3, 0, Math.PI*2);
+  ctx.fillStyle = '#374151';
+  ctx.fill();
+}
+
+// ─── REVENUE HISTORY CHART (multi-year line chart) ────────────────────────────
+function renderRevenueHistoryChart() {
+  const payments = state.transactions.filter(t => !isRefundTxn(t));
+
+  // Group by year → month
+  const byYearMonth = {};
+  payments.forEach(t => {
+    const dateStr = getTxnDate(t);
+    if (!dateStr) return;
+    const d = new Date(dateStr);
+    if (isNaN(d)) return;
+    const yr = d.getFullYear();
+    const mo = d.getMonth() + 1; // 1–12
+    if (!byYearMonth[yr]) byYearMonth[yr] = {};
+    byYearMonth[yr][mo] = (byYearMonth[yr][mo] || 0) + getTxnAmount(t);
+  });
+
+  const years = Object.keys(byYearMonth).map(Number).sort();
+  const months = Array.from({length: 12}, (_,i) => i+1);
+
+  const yearColors = {
+    2023: '#7c6fcd',
+    2024: '#60a5fa',
+    2025: '#86efac',
+    2026: '#c4b5fd'
+  };
+
+  const datasets = years.map(yr => ({
+    label: String(yr),
+    data: months.map(m => byYearMonth[yr][m] || null),
+    borderColor: yearColors[yr] || '#94a3b8',
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    tension: 0.3,
+    pointRadius: 4,
+    pointHoverRadius: 6,
+    spanGaps: false
+  }));
+
+  // Legend
+  const legendEl = document.getElementById('revenue-history-legend');
+  legendEl.innerHTML = years.map(yr => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${yearColors[yr] || '#94a3b8'}"></div>
+      ${yr}
+    </div>
+  `).join('');
+
+  destroyChart('revenue-history-chart');
+  const ctx = document.getElementById('revenue-history-chart');
+  if (!ctx) return;
+  state.charts['revenue-history-chart'] = new Chart(ctx, {
+    type: 'line',
+    data: { labels: months, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ' ' + ctx.dataset.label + ': $' + fmtDollars(ctx.raw || 0)
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#8b90a8', font: { size: 11 } },
+          grid: { color: 'rgba(255,255,255,0.06)' },
+          title: { display: false }
+        },
+        y: {
+          ticks: {
+            color: '#8b90a8', font: { size: 11 },
+            callback: v => '$' + fmtK(v)
+          },
+          grid: { color: 'rgba(255,255,255,0.06)' },
+          title: { display: true, text: 'Net Revenue', color: '#8b90a8', font: { size: 11 } }
+        }
+      }
+    }
+  });
+}
+
+// ─── REVENUE BY ENROLLMENT TYPE (monthly stacked) ────────────────────────────
+function renderCampRevenueChart() {
+  // ── Identify camp enrollments by classType/classCategory ──────────────────
+  // CONFIRMED: enrollments have classType='Camps' or classCategory contains 'camp'
+  // Transactions don't have classType, so we cross-reference by className
+  const campEnrollments = state.enrollments.filter(e =>
+    (e.classType     || '').toLowerCase().includes('camp') ||
+    (e.classCategory || '').toLowerCase().includes('camp')
+  );
+  const campClassNames = new Set(campEnrollments.map(e => e.className).filter(Boolean));
+  console.log(`🏕️ Camp class names (${campClassNames.size}):`, [...campClassNames].slice(0, 8));
+
+  // ── Layer 1: Collected — actual payments received for camp classes ─────────
+  // Use transactionDate grouped by month, amountPaid only (no refunds)
+  const campTxns = state.transactions.filter(t => !t.isRefund && campClassNames.has(t.className || ''));
+  console.log(`🏕️ Camp transactions: ${campTxns.length} | Sample enrollmentTypeName: ${campTxns[0]?.enrollmentTypeName}`);
+
+  const collectedMap = {};
+  campTxns.forEach(t => {
+    if (!t.transactionDate) return;
+    const d = new Date(t.transactionDate);
+    if (isNaN(d.getTime())) return;
+    const mo = d.toLocaleString('en-US', { month: 'short', year: '2-digit' });
+    collectedMap[mo] = (collectedMap[mo] || 0) + (t.amountPaid || 0);
+  });
+
+  // ── Layer 2: Balance remaining — collected 14 days before camp start date ───
+  // CONFIRMED enrollment fields: amountPaid, depositAmount, eventStartDate, classStartDate
+  // Future balance = amountPaid (total) - depositAmount (already collected)
+  // Collection date = classStartDate or eventStartDate MINUS 14 days
+  const now = new Date();
+  const balanceMap  = {}; // future (collection date > today)
+  const pastDueMap  = {}; // already due but in past (collection date <= today, still unpaid)
+
+  campEnrollments.forEach(e => {
+    const total   = e.amountPaid    || 0;
+    const deposit = e.depositAmount || 0;
+    const balance = Math.max(0, total - deposit);
+    if (balance <= 0) return; // already paid in full
+
+    // Determine when balance will be collected: 14 days before camp start
+    const startStr = e.eventStartDate || e.classStartDate || '';
+    if (!startStr) return;
+    const startD = new Date(startStr);
+    if (isNaN(startD.getTime())) return;
+
+    const collectionDate = new Date(startD);
+    collectionDate.setDate(collectionDate.getDate() - 14);
+
+    const mo = collectionDate.toLocaleString('en-US', { month: 'short', year: '2-digit' });
+
+    if (collectionDate > now) {
+      // Future — not yet collected
+      balanceMap[mo] = (balanceMap[mo] || 0) + balance;
+    } else {
+      // Past due — should have been collected already but wasn't via transaction
+      // Only add if we don't already see it in collectedMap (avoid double counting)
+      pastDueMap[mo] = (pastDueMap[mo] || 0) + balance;
+    }
+  });
+
+  console.log(`🏕️ Balance due future months: ${Object.keys(balanceMap).length}, past-due months: ${Object.keys(pastDueMap).length}`);
+
+  // ── Combine all months ────────────────────────────────────────────────────
+  const allMonthsSet = new Set([...Object.keys(collectedMap), ...Object.keys(balanceMap), ...Object.keys(pastDueMap)]);
+  const allMonths = [...allMonthsSet].sort((a, b) => {
+    // Parse "Jan 25" style labels for sorting
+    const parse = s => { const [mo, yr] = s.split(' '); return new Date(`${mo} 20${yr}`); };
+    return parse(a) - parse(b);
+  });
+
+  // Single historical dataset — camps only
+  const datasets = [
+    {
+      label: '✅ Collected',
+      data: allMonths.map(m => collectedMap[m] || 0),
+      backgroundColor: '#8b7de8',
+      borderRadius: 2,
+      borderSkipped: false,
+      stack: 'revenue',
+    },
+    {
+      label: '📅 Due (−14 days)',
+      data: allMonths.map(m => balanceMap[m] || 0),
+      backgroundColor: 'rgba(34, 197, 94, 0.5)',
+      borderColor: 'rgba(34, 197, 94, 0.8)',
+      borderWidth: 1,
+      borderRadius: 2,
+      borderSkipped: false,
+      stack: 'revenue',
+    },
+  ];
+
+  const chartConfig = {
+    type: 'bar',
+    data: { labels: allMonths, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true, position: 'top',
+          labels: { font: { size: 11 }, color: '#8b90a8', boxWidth: 12, padding: 16 }
+        },
+        tooltip: {
+          callbacks: {
+            label: c => ' ' + c.dataset.label + ': $' + fmtDollars(c.raw || 0),
+            footer: items => {
+              const total = items.reduce((s, i) => s + (i.raw || 0), 0);
+              return total > 0 ? 'Total: $' + fmtDollars(total) : '';
+            }
+          }
+        }
+      },
+      scales: {
+        x: { stacked: true, ticks: { color: '#8b90a8', font: { size: 11 }, maxRotation: 45 }, grid: { display: false } },
+        y: { stacked: true, ticks: { color: '#8b90a8', font: { size: 11 }, callback: v => '$' + fmtK(v) }, grid: { color: 'rgba(255,255,255,0.06)' } }
+      }
+    }
+  };
+
+  ['camp-revenue-chart-revenue-page', 'camp-revenue-chart'].forEach(id => {
+    destroyChart(id);
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    state.charts[id] = new Chart(ctx, JSON.parse(JSON.stringify(chartConfig)));
+  });
+}
+
+// ─── ENROLLMENT CHARTS ────────────────────────────────────────────────────────
+function renderEnrollmentCharts() {
+  const enr = state.enrollments;
+  if (!enr.length) return;
+
+  // By classType (Belts, Camps, etc.)
+  const byType = {};
+  enr.forEach(e => { const k = e.classType||'Other'; byType[k] = (byType[k]||0) + 1; });
+  const typeKeys = Object.keys(byType).sort((a,b) => byType[b]-byType[a]);
+  renderDoughnut('enrollment-type-chart', typeKeys, typeKeys.map(k=>byType[k]), lightPalette(typeKeys.length));
+
+  // By classCategory
+  const byCat = {};
+  enr.forEach(e => { const k = e.classCategory||'Other'; byCat[k] = (byCat[k]||0) + 1; });
+  const catKeys = Object.keys(byCat).sort((a,b) => byCat[b]-byCat[a]).slice(0,8);
+  renderBarChart('enrollment-status-chart', catKeys, catKeys.map(k=>byCat[k]), '#8b7de8', 'Enrollments');
+}
+
+function renderTransactionCharts() {
+  const txns = state.transactions;
+  if (!txns.length) return;
+
+  // By enrollmentTypeName (Classes, Camps, Events, etc.)
+  const byType = {};
+  txns.filter(t => !t.isRefund).forEach(t => {
+    const k = t.enrollmentTypeName||'Other';
+    byType[k] = (byType[k]||0) + (t.amountPaid||0);
+  });
+  const typeKeys = Object.keys(byType).sort((a,b) => byType[b]-byType[a]);
+  if (typeKeys.length) renderDoughnut('txn-type-chart', typeKeys, typeKeys.map(k=>byType[k]), lightPalette(typeKeys.length));
+
+  // By paymentMethod
+  const byMethod = {};
+  txns.filter(t => !t.isRefund).forEach(t => {
+    const k = t.paymentMethod||'Unknown';
+    byMethod[k] = (byMethod[k]||0) + (t.amountPaid||0);
+  });
+  const methodKeys = Object.keys(byMethod).sort((a,b) => byMethod[b]-byMethod[a]);
+  if (methodKeys.length) renderDoughnut('txn-status-chart', methodKeys, methodKeys.map(k=>byMethod[k]), lightPalette(methodKeys.length));
+}
+
+function renderLeadCharts() {
+  if (!state.leads.length) return;
+  const sc = countBy(state.leads.filter(l => l.status), l => l.status);
+  renderDoughnut('leads-status-chart', Object.keys(sc), Object.values(sc), lightPalette(Object.keys(sc).length));
+  const src = countBy(state.leads.filter(l => l.source), l => l.source);
+  renderDoughnut('leads-source-chart', Object.keys(src), Object.values(src), lightPalette(Object.keys(src).length));
+}
+
+// ─── ENROLLMENTS TABLE ────────────────────────────────────────────────────────
+function renderEnrollmentsTable() {
+  // SESSION STRATEGY (confirmed from API debug):
+  // GetClassesDetailsInfo = one record per session, each has a unique classId
+  // Key sessions by classId — the only truly unique identifier per session
+  // Schedule = daysOfWeek + timings[0].timeOfDay
+  // Enrolled = totalSlots - availableSlots
+  // Completed = upcomingDates last endDate < today
+
+  const now = new Date();
+  const sessionMap = {}; // key = classId (string)
+
+  state.classes.forEach(cl => {
+    if ((cl.classType || '') !== 'Belts') return;
+
+    const classId  = String(cl.classId || cl.ClassId || '');
+    const beltName = (cl.className || '').trim();
+
+    // Use classId as key; fall back to beltName+daysOfWeek+startDate if no id
+    const daysOfWeek = cl.daysOfWeek || '';
+    const timeStr    = (cl.timings && cl.timings[0]) ? (cl.timings[0].timeOfDay || '') : '';
+    const schedule   = [daysOfWeek, timeStr].filter(Boolean).join('  ') || '—';
+
+    // Start/end from upcomingDates
+    let startDate = '', endDate = '', endDateObj = null;
+    if (cl.upcomingDates && cl.upcomingDates.length) {
+      const sorted = cl.upcomingDates
+        .map(d => ({ s: new Date(d.startDate), e: new Date(d.endDate) }))
+        .filter(d => !isNaN(d.s))
+        .sort((a,b) => a.s - b.s);
+      if (sorted.length) {
+        startDate  = sorted[0].s.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+        endDateObj = sorted[sorted.length-1].e;
+        if (!isNaN(endDateObj)) {
+          endDate = endDateObj.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+        }
+      }
+    }
+
+    // Enrolled count from slots
+    const slots      = cl.slots && typeof cl.slots === 'object' ? cl.slots : {};
+    const totalSlots = Number(slots.totalSlots ?? slots.total ?? 0);
+    const available  = Number(slots.availableSlots ?? slots.available ?? 0);
+    const enrolled   = Math.max(0, totalSlots - available);
+    const price      = Number(cl.price || 279);
+
+    const isCompleted = endDateObj && !isNaN(endDateObj) && endDateObj < now;
+    const isActive    = cl.isActive !== false && !isCompleted;
+
+    // Unique key: prefer classId, fall back to name+days+startDate
+    const sessionKey = classId || (beltName + '|' + daysOfWeek + '|' + startDate);
+
+    sessionMap[sessionKey] = {
+      fullName: sessionKey, beltName,
+      schedule, startDate, endDate,
+      activeCount: enrolled,
+      capacity:    totalSlots,
+      price, isActive, isCompleted,
+      color: beltColor(beltName),
+    };
+  });
+
+  // Step 2: Supplement with enrollment records for any sessions not in classes
+  // (fallback: use className+classStartDate as key)
+  state.enrollments.forEach(e => {
+    if ((e.classType || '') !== 'Belts') return;
+    const beltName   = (e.className || '').trim();
+    // Check if this belt is already covered by a class record
+    const covered = Object.values(sessionMap).some(s => s.beltName === beltName);
+    if (covered) return; // already have data from classes endpoint — skip
+
+    const startDate  = e.classStartDate || '';
+    const sessionKey = beltName + (startDate ? ' | ' + startDate : '');
+    if (!sessionMap[sessionKey]) {
+      sessionMap[sessionKey] = {
+        fullName: sessionKey, beltName,
+        schedule: startDate || '—',
+        startDate, endDate: '',
+        activeCount: 0, capacity: 0,
+        price: 279, isActive: true, isCompleted: false,
+        color: beltColor(beltName),
+      };
+    }
+    sessionMap[sessionKey].activeCount++;
+  });
+
+  // Step 3: Group sessions under belt names
+  const beltGroups = {}; // beltName → { sessions[], totals }
+  Object.values(sessionMap).forEach(s => {
+    if (!beltGroups[s.beltName]) {
+      beltGroups[s.beltName] = { beltName: s.beltName, color: s.color, sessions: [] };
+    }
+    beltGroups[s.beltName].sessions.push(s);
+  });
+
+  // Sort sessions within each belt by schedule/startDate
+  Object.values(beltGroups).forEach(g => {
+    g.sessions.sort((a, b) => a.schedule.localeCompare(b.schedule));
+    g.totalActive   = g.sessions.reduce((s, x) => s + x.activeCount, 0);
+    g.totalCapacity = g.sessions.reduce((s, x) => s + x.capacity,    0);
+    g.totalRev      = g.sessions.reduce((s, x) => s + x.activeCount * (x.price || 149), 0);
+    g.sessionCount  = g.sessions.length;
+  });
+
+  const groups = Object.values(beltGroups).sort((a, b) => a.beltName.localeCompare(b.beltName));
+
+  console.log(`📚 Belt groups: ${groups.length}`, groups.map(g => `${g.beltName}: ${g.sessionCount} sessions, ${g.totalActive} active`));
+
+  // Store flat rows for capacity bar (one per group)
+  const flatRows = groups.map(g => ({
+    className:   g.beltName,
+    activeCount: g.totalActive,
+    capacity:    g.totalCapacity,
+    isActive:    true,
+  }));
+
+  state.filteredEnrollments = groups;
+  state.pages.enrollments = 1;
+
+  // Expand all belts by default
+  groups.forEach(g => state.expandedBelts.add(g.beltName));
+
+  renderBeltCapacityBar(flatRows);
+  applyEnrollmentFilters();
+}
+
+// Maps belt name → color dot
+function beltColor(name) {
+  const n = (name || '').toLowerCase();
+  if (n.includes('gray') || n.includes('grey')) return '#94a3b8';
+  if (n.includes('white'))      return '#e2e8f0';
+  if (n.includes('green'))      return '#22c55e';
+  if (n.includes('red'))        return '#ef4444';
+  if (n.includes('orange'))     return '#f97316';
+  if (n.includes('foundation')) return '#8b5cf6';
+  if (n.includes('stem'))       return '#3b82f6';
+  if (n.includes('blue'))       return '#60a5fa';
+  if (n.includes('purple'))     return '#a855f7';
+  if (n.includes('brown'))      return '#92400e';
+  if (n.includes('black'))      return '#1e293b';
+  return '#64748b';
+}
+
+function renderBeltCapacityBar(classes) {
+  const el = document.getElementById('belt-capacity-bar');
+  if (!el) return;
+
+  const totalEnrolled  = classes.reduce((s,c) => s + (Number(c.activeCount) || 0), 0);
+  const totalCapacity  = classes.reduce((s,c) => s + (Number(c.capacity)    || 0), 0);
+  if (!totalCapacity) { el.innerHTML = '<p style="color:var(--text-dim);font-size:13px;padding:8px">No capacity data available</p>'; return; }
+
+  const pct = Math.min(100, Math.round(totalEnrolled / totalCapacity * 100));
+  const markerLeft = Math.min(98, Math.max(1, pct));
+
+  el.innerHTML = `
+    <div style="position:relative;margin:24px 16px 8px">
+      <!-- Marker -->
+      <div style="position:absolute;left:${markerLeft}%;transform:translateX(-50%);top:-22px;text-align:center">
+        <div style="font-size:13px;font-weight:700;color:var(--accent-blue)">${totalEnrolled}</div>
+        <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #1e40af;margin:0 auto"></div>
+      </div>
+      <!-- Track -->
+      <div style="height:28px;background:rgba(96,165,250,0.15);border-radius:6px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#1d4ed8,#3b82f6);border-radius:6px;transition:width 0.6s ease"></div>
+      </div>
+      <!-- Labels -->
+      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--text-muted)">
+        <span>0</span>
+        <span style="font-weight:600;color:var(--accent-blue)">${pct}% full · ${totalEnrolled} of ${totalCapacity} seats filled</span>
+        <span>Goal ${totalCapacity}</span>
+      </div>
+    </div>`;
+}
+
+function filterEnrollments() { state.pages.enrollments = 1; applyEnrollmentFilters(); }
+
+function applyEnrollmentFilters() {
+  const search = (document.getElementById('enroll-search')?.value || '').toLowerCase();
+  const status = document.getElementById('enroll-status-filter')?.value || '';
+
+  let groups = [...state.filteredEnrollments];
+
+  // Filter sessions within each group
+  if (search || status) {
+    groups = groups.map(g => {
+      const sessions = g.sessions.filter(s => {
+        const matchSearch = !search ||
+          g.beltName.toLowerCase().includes(search) ||
+          s.schedule.toLowerCase().includes(search) ||
+          s.fullName.toLowerCase().includes(search);
+        const matchStatus = !status ||
+          (status === 'active' ? s.isActive : !s.isActive);
+        return matchSearch && matchStatus;
+      });
+      return { ...g, sessions };
+    }).filter(g => g.sessions.length > 0);
+    // Auto-expand when searching so results are visible
+    if (search) groups.forEach(g => state.expandedBelts.add(g.beltName));
+  }
+
+  const { key, dir } = state.sortConfig.enrollments || { key: 'beltName', dir: 1 };
+  groups.sort((a, b) => {
+    const av = a[key] ?? a.beltName ?? '', bv = b[key] ?? b.beltName ?? '';
+    if (typeof av === 'number' && typeof bv === 'number') return dir * (av - bv);
+    return dir * String(av).localeCompare(String(bv));
+  });
+
+  const totalSessions = groups.reduce((s, g) => s + g.sessions.length, 0);
+  document.getElementById('enroll-count').textContent =
+    groups.length + ' belt' + (groups.length !== 1 ? 's' : '') + ' · ' + totalSessions + ' sessions';
+
+  // Render grouped rows directly (bypass paintTable paging — groups are few)
+  const tbody = document.getElementById('enrollments-table');
+  if (!groups.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--text-muted)">No data available</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = groups.map(g => enrollGroupRows(g)).join('');
+
+  const rc = document.getElementById('enroll-row-count');
+  if (rc) rc.textContent = groups.length + ' belt levels · ' + totalSessions + ' sessions';
+
+  // Hide pagination (not needed with group view)
+  const pg = document.getElementById('enroll-pagination');
+  if (pg) pg.innerHTML = '';
+}
+
+function enrollGroupRows(g) {
+  const isOpen  = state.expandedBelts.has(g.beltName);
+  const pct     = g.totalCapacity > 0 ? Math.min(100, Math.round(g.totalActive / g.totalCapacity * 100)) : 0;
+  const barClr  = pct >= 100 ? '#ef4444' : pct >= 80 ? '#f59e0b' : pct >= 40 ? '#22c55e' : '#60a5fa';
+  const rev     = g.totalRev || 0;
+
+  const headerRow = `<tr onclick="toggleBeltGroup('${g.beltName.replace(/'/g,"\\'")}',this)"
+      style="cursor:pointer;background:var(--surface2);border-bottom:1px solid var(--border)">
+    <td style="font-weight:600;font-size:13px">
+      <span style="display:inline-flex;align-items:center;gap:8px">
+        <span style="width:9px;height:9px;border-radius:50%;background:${g.color};flex-shrink:0;display:inline-block"></span>
+        ${g.beltName}
+        <span style="font-size:10px;padding:2px 7px;border-radius:20px;background:var(--surface3,#1c2333);color:var(--text-muted);border:1px solid var(--border)">${g.sessionCount} session${g.sessionCount !== 1 ? 's' : ''}</span>
+        <span class="belt-chevron" style="font-size:10px;color:var(--text-muted);transition:transform .2s;transform:rotate(${isOpen ? '90' : '0'}deg)">▶</span>
+      </span>
+    </td>
+    <td style="color:var(--text-muted);font-size:12px">—</td>
+    <td style="color:var(--text-muted);font-size:12px">—</td>
+    <td style="color:var(--text-muted);font-size:12px">—</td>
+    <td style="text-align:center">
+      <span style="display:inline-flex;align-items:center;gap:6px">
+        <span style="display:inline-block;width:50px;height:5px;background:var(--border);border-radius:3px;overflow:hidden"><span style="display:block;height:100%;width:${pct}%;background:${barClr}"></span></span>
+        <strong style="color:${barClr}">${g.totalActive}</strong>
+        <span style="color:var(--text-muted);font-size:11px">/ ${g.totalCapacity}</span>
+      </span>
+    </td>
+    <td style="text-align:center;color:var(--text-muted);font-size:12px">${g.totalCapacity}</td>
+    <td style="text-align:right;color:#06b6d4;font-size:12px;font-weight:600">$${rev.toLocaleString()}</td>
+  </tr>`;
+
+  const sessionRows = isOpen ? g.sessions.map(s => enrollSessionRow(s, g.color)).join('') : '';
+  return headerRow + sessionRows;
+}
+
+function enrollSessionRow(s, color) {
+  const enrolled = s.activeCount;
+  const cap      = s.capacity;
+  const pct      = cap > 0 ? Math.min(100, Math.round(enrolled / cap * 100)) : 0;
+  const barClr   = pct >= 100 ? '#ef4444' : pct >= 80 ? '#f59e0b' : pct >= 40 ? '#22c55e' : '#60a5fa';
+  const rev      = enrolled * (s.price || 149);
+  const startDisp = s.startDate ? (fmtDate(s.startDate) !== '—' ? fmtDate(s.startDate) : s.startDate) : '—';
+  const endDisp   = s.endDate || '<span style="color:var(--text-dim)">Ongoing</span>';
+  const statusPip = s.isCompleted
+    ? `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(100,116,139,.15);color:var(--text-muted)">Completed</span>`
+    : s.isActive
+    ? `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(34,197,94,.15);color:#22c55e">Active</span>`
+    : `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(245,158,11,.15);color:#f59e0b">Inactive</span>`;
+
+  return `<tr style="background:var(--surface);border-bottom:1px solid rgba(45,49,66,.5)">
+    <td style="padding-left:32px;font-size:12px;color:var(--text-muted)">
+      <span style="color:${color};margin-right:6px;font-size:11px">│</span>
+      ${statusPip}
+    </td>
+    <td style="font-size:12px;font-weight:500">${s.schedule}</td>
+    <td style="font-size:12px;color:var(--text-muted)">${startDisp}</td>
+    <td style="font-size:12px;color:var(--text-muted)">${endDisp}</td>
+    <td style="text-align:center">
+      <span style="display:inline-flex;align-items:center;gap:6px">
+        <span style="display:inline-block;width:40px;height:4px;background:var(--border);border-radius:2px;overflow:hidden"><span style="display:block;height:100%;width:${pct}%;background:${barClr}"></span></span>
+        <span style="font-weight:600;color:${barClr}">${enrolled}</span>
+        <span style="color:var(--text-dim);font-size:11px">/ ${cap || '—'}</span>
+        ${cap ? `<span style="color:var(--text-dim);font-size:10px">(${pct}%)</span>` : ''}
+      </span>
+    </td>
+    <td style="text-align:center;color:var(--text-muted);font-size:12px">${cap || '—'}</td>
+    <td style="text-align:right;font-size:12px;color:#06b6d4">$${rev.toLocaleString()}<span style="color:var(--text-dim);font-size:10px">/mo</span></td>
+  </tr>`;
+}
+
+function toggleBeltGroup(beltName, rowEl) {
+  if (state.expandedBelts.has(beltName)) {
+    state.expandedBelts.delete(beltName);
+  } else {
+    state.expandedBelts.add(beltName);
+  }
+  applyEnrollmentFilters();
+}
+
+function toggleAllBelts() {
+  state.allBeltsExpanded = !state.allBeltsExpanded;
+  const btn = document.getElementById('enroll-expand-btn');
+  if (state.allBeltsExpanded) {
+    (state.filteredEnrollments || []).forEach(g => state.expandedBelts.add(g.beltName));
+    if (btn) btn.textContent = 'Collapse All';
+  } else {
+    state.expandedBelts.clear();
+    if (btn) btn.textContent = 'Expand All';
+  }
+  applyEnrollmentFilters();
+}
+
+function enrollRow(e) {
+  // Fallback single-row renderer (not used in grouped view but kept for safety)
+  const enrolled  = Number(e.activeCount) || 0;
+  const cap       = Number(e.capacity)    || 0;
+  const fillPct   = cap > 0 ? Math.min(100, Math.round(enrolled / cap * 100)) : 0;
+  const fillColor = fillPct >= 100 ? '#ef4444' : fillPct >= 80 ? '#f59e0b' : '#22c55e';
+  const startDisplay = e.startDate ? (fmtDate(e.startDate) !== '—' ? fmtDate(e.startDate) : e.startDate) : '—';
+  return `<tr>
+    <td style="font-weight:500">${e.className}</td>
+    <td style="color:var(--text-muted)">${e.schedule || '—'}</td>
+    <td class="muted">${startDisplay}</td>
+    <td class="muted">${e.endDate || '—'}</td>
+    <td style="text-align:center;font-weight:700;color:var(--accent-blue)">${enrolled}<span style="color:var(--text-dim);font-weight:400;font-size:11px"> / ${cap || '—'}</span></td>
+    <td style="text-align:center;color:var(--text-muted)">${cap || '—'}</td>
+    <td style="text-align:right;color:#06b6d4">$${(enrolled*149).toLocaleString()}</td>
+  </tr>`;
+}
+
+function sortTable(tableKey, colKey) {
+  if (!state.sortConfig[tableKey]) state.sortConfig[tableKey] = { key: colKey, dir: 1 };
+  else if (state.sortConfig[tableKey].key === colKey) state.sortConfig[tableKey].dir *= -1;
+  else { state.sortConfig[tableKey].key = colKey; state.sortConfig[tableKey].dir = 1; }
+  applyEnrollmentFilters();
+}
+
+
+// ─── CAMP SESSIONS (enrollment vs capacity per session) ──────────────────────
+function getCampTiming(dateStr) {
+  if (!dateStr) return 'Other';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return 'Other';
+  const mo = d.getMonth() + 1;
+  if (mo >= 6 && mo <= 8) return 'Summer';
+  if (mo >= 9 && mo <= 11) return 'Fall';
+  if (mo === 12 || mo <= 2) return 'Winter';
+  return 'Spring';
+}
+
+function buildCampSessions() {
+  const sessions = [];
+  const coveredKeys = new Set();
+
+  // Primary: use classes endpoint — one record per camp session
+  // CONFIRMED fields: slots.totalSlots, slots.availableSlots
+  //   upcomingDates: array of { startDate: "ISO string", endDate: "ISO string" }
+  state.classes.forEach(cl => {
+    if (!(cl.classType||'').toLowerCase().includes('camp')) return;
+
+    // CONFIRMED slot field names from console debug
+    const slots      = cl.slots && typeof cl.slots === 'object' ? cl.slots : {};
+    const totalSlots = Number(slots.totalSlots ?? slots.total ?? 0);
+    const available  = Number(slots.availableSlots ?? slots.available ?? 0);
+    const enrolled   = Math.max(0, totalSlots - available);
+
+    // upcomingDates contains objects {startDate, endDate} — NOT raw date strings
+    if (cl.upcomingDates && Array.isArray(cl.upcomingDates) && cl.upcomingDates.length) {
+      // Each upcomingDates entry is one session date range
+      // Group by startDate to handle multi-week camps as one session
+      const parsed = cl.upcomingDates
+        .map(d => ({ s: new Date(d.startDate), e: new Date(d.endDate) }))
+        .filter(d => !isNaN(d.s));
+
+      if (!parsed.length) {
+        // Has upcomingDates array but none parsed — push with enrollment fallback
+        sessions.push({ name: cl.className||'—', timing: 'Other', startDate: '', endDate: '', enrollmentCount: enrolled, capacity: totalSlots });
+        return;
+      }
+
+      parsed.sort((a,b) => a.s - b.s);
+      const start    = parsed[0].s.toISOString().split('T')[0];
+      const lastEnd  = parsed[parsed.length-1].e;
+      const end      = !isNaN(lastEnd) ? lastEnd.toISOString().split('T')[0] : '';
+      const key      = cl.className + '|' + start;
+      coveredKeys.add(key);
+      sessions.push({
+        name:            cl.className || '—',
+        timing:          getCampTiming(start),
+        startDate:       start,
+        endDate:         end,
+        enrollmentCount: enrolled,
+        capacity:        totalSlots,
+      });
+    } else {
+      // No upcomingDates — fall back to eventStartDate from enrollment records
+      const groups = {};
+      state.enrollments.forEach(e => {
+        if (e.className !== cl.className) return;
+        const k = e.eventStartDate || e.classStartDate || 'none';
+        if (!groups[k]) groups[k] = { start: e.eventStartDate||e.classStartDate||'', end: e.eventEndDate||'', count: 0 };
+        groups[k].count++;
+      });
+      const grps = Object.values(groups).filter(g => g.start !== 'none');
+      if (grps.length) {
+        grps.forEach(g => {
+          const key = cl.className + '|' + g.start;
+          coveredKeys.add(key);
+          sessions.push({ name: cl.className||'—', timing: getCampTiming(g.start), startDate: g.start, endDate: g.end, enrollmentCount: g.count, capacity: totalSlots });
+        });
+      } else {
+        sessions.push({ name: cl.className||'—', timing: 'Other', startDate: '', endDate: '', enrollmentCount: enrolled, capacity: totalSlots });
+      }
+    }
+  });
+
+  // Secondary: enrollment records not matched by any class (older/archived camps)
+  const eGroups = {};
+  state.enrollments.forEach(e => {
+    const type = (e.classType||'').toLowerCase(), cat = (e.classCategory||'').toLowerCase();
+    if (!type.includes('camp') && !cat.includes('camp')) return;
+    const key = (e.className||e.eventName||'—') + '|' + (e.eventStartDate||e.classStartDate||'');
+    if (coveredKeys.has(key)) return;
+    if (!eGroups[key]) eGroups[key] = {
+      name:  e.className || e.eventName || '—',
+      start: e.eventStartDate || e.classStartDate || '',
+      end:   e.eventEndDate   || '',
+      count: 0,
+    };
+    eGroups[key].count++;
+  });
+  Object.values(eGroups).forEach(g => sessions.push({
+    name: g.name, timing: getCampTiming(g.start),
+    startDate: g.start, endDate: g.end,
+    enrollmentCount: g.count, capacity: 0,
+  }));
+
+  return sessions;
+}
+
+function renderCampCapacityBar(sessions) {
+  const el = document.getElementById('camp-capacity-bar');
+  if (!el) return;
+  const year   = document.getElementById('camp-session-year')?.value   || '';
+  const timing = document.getElementById('camp-session-timing')?.value || '';
+  let data = sessions;
+  if (year)   data = data.filter(s => s.startDate && String(new Date(s.startDate).getFullYear()) === year);
+  if (timing) data = data.filter(s => s.timing === timing);
+  const totalEnrolled = data.reduce((s,x) => s + (x.enrollmentCount||0), 0);
+  const totalCap      = data.reduce((s,x) => s + (x.capacity||0),        0);
+  if (!totalCap) { el.innerHTML = '<p style="color:var(--text-dim);font-size:13px;padding:8px 16px">No capacity data</p>'; return; }
+  const pct = Math.min(100, Math.round(totalEnrolled / totalCap * 100));
+  const ml  = Math.min(98, Math.max(1, pct));
+  el.innerHTML = `
+    <div style="position:relative;margin:24px 16px 8px">
+      <div style="position:absolute;left:${ml}%;transform:translateX(-50%);top:-22px;text-align:center">
+        <div style="font-size:13px;font-weight:700;color:var(--accent-purple)">${totalEnrolled}</div>
+        <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #7c3aed;margin:0 auto"></div>
+      </div>
+      <div style="height:28px;background:rgba(167,139,250,0.15);border-radius:6px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:6px"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--text-muted)">
+        <span>0</span>
+        <span style="font-weight:600;color:var(--accent-purple)">${pct}% filled · ${totalEnrolled} enrolled</span>
+        <span>Goal ${totalCap}</span>
+      </div>
+    </div>`;
+}
+
+function renderCampSessions() {
+  state._campSessions = buildCampSessions();
+  state.sortConfig.campSessions = { key: 'startDate', dir: 1 };
+  state.pages.campSessions = 1;
+  const timings = [...new Set(state._campSessions.map(s=>s.timing).filter(Boolean))].sort();
+  const tSel = document.getElementById('camp-session-timing');
+  if (tSel) tSel.innerHTML = '<option value="">All Timing</option>' + timings.map(t=>`<option value="${t}">${t}</option>`).join('');
+  const years = [...new Set(state._campSessions.map(s=>{ const d=new Date(s.startDate); return isNaN(d)?null:d.getFullYear(); }).filter(Boolean))].sort();
+  const ySel = document.getElementById('camp-session-year');
+  if (ySel) {
+    ySel.innerHTML = '<option value="">All Years</option>' + years.map(y=>`<option value="${y}">${y}</option>`).join('');
+    const cur = new Date().getFullYear();
+    ySel.value = years.includes(cur) ? String(cur) : (years[years.length-1] ? String(years[years.length-1]) : '');
+  }
+  renderCampCapacityBar(state._campSessions);
+  applyCampSessionFilters();
+}
+
+function filterCampSessions() { state.pages.campSessions = 1; renderCampCapacityBar(state._campSessions||[]); applyCampSessionFilters(); }
+
+function sortCampSessions(key) {
+  const cfg = state.sortConfig.campSessions || { key, dir: 1 };
+  if (cfg.key === key) cfg.dir *= -1; else { cfg.key = key; cfg.dir = 1; }
+  state.sortConfig.campSessions = cfg;
+  applyCampSessionFilters();
+}
+
+function applyCampSessionFilters() {
+  const search = (document.getElementById('camp-session-search')?.value||'').toLowerCase();
+  const timing =  document.getElementById('camp-session-timing')?.value || '';
+  const year   =  document.getElementById('camp-session-year')?.value   || '';
+  let data = (state._campSessions||[]).filter(s => {
+    const ms = !search || s.name.toLowerCase().includes(search);
+    const mt = !timing || s.timing === timing;
+    const my = !year   || (s.startDate && String(new Date(s.startDate).getFullYear()) === year);
+    return ms && mt && my;
+  });
+  const { key, dir } = state.sortConfig.campSessions || { key:'startDate', dir:1 };
+  data.sort((a,b) => {
+    const av=a[key]??'', bv=b[key]??'';
+    if (key.includes('Date')) { const da=new Date(av),db=new Date(bv); if(!isNaN(da)&&!isNaN(db)) return dir*(da-db); }
+    if (typeof av==='number') return dir*(av-bv);
+    return dir*String(av).localeCompare(String(bv));
+  });
+  const te=data.reduce((s,x)=>s+(x.enrollmentCount||0),0), tc=data.reduce((s,x)=>s+(x.capacity||0),0);
+  document.getElementById('camp-session-count').textContent = `${data.length} sessions · ${te} enrolled / ${tc} capacity`;
+  const tbody = document.getElementById('camp-sessions-table');
+  if (tbody) tbody.innerHTML = data.map(s => {
+    const cap=s.capacity||0, enr=s.enrollmentCount||0;
+    const fp=cap>0?Math.min(100,Math.round(enr/cap*100)):0;
+    const fc=fp>=100?'#ef4444':fp>=80?'#f59e0b':'#a78bfa';
+    const capCell=cap>0?`<div style="display:flex;align-items:center;gap:6px;justify-content:center"><div style="width:36px;height:5px;background:rgba(167,139,250,0.15);border-radius:3px;overflow:hidden"><div style="height:100%;width:${fp}%;background:${fc}"></div></div><span>${cap}</span></div>`:`<span class="muted">—</span>`;
+    return `<tr><td style="font-weight:500">${s.name}</td><td class="muted">${s.timing||'—'}</td><td class="muted">${s.startDate?fmtDate(s.startDate):'—'}</td><td class="muted">${s.endDate?fmtDate(s.endDate):'—'}</td><td style="text-align:center;font-weight:600">${enr}</td><td style="text-align:center">${capCell}</td></tr>`;
+  }).join('') || '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-dim)">No sessions found</td></tr>';
+  renderPagination('camp-sessions-pagination','campSessions');
+  const rc=document.getElementById('camp-sessions-row-count'); if(rc) rc.textContent=data.length+' rows';
+}
+
+function getCampRows() {
+  function parseOrdinalDate(str) {
+    if (!str) return null;
+    var cleaned = String(str).replace(/(\d+)(st|nd|rd|th)/i, '$1');
+    var d = new Date(cleaned);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  function getDurationDays(category) {
+    var s = (category || '').toLowerCase();
+    if (s.indexOf('5 day') >= 0) return 4;
+    if (s.indexOf('4 day') >= 0) return 3;
+    if (s.indexOf('3 day') >= 0) return 2;
+    if (s.indexOf('2 day') >= 0) return 1;
+    return 0;
+  }
+  var campEnrollments = state.enrollments.filter(function(e) {
+    return (e.classType || '').toLowerCase().indexOf('camp') >= 0 ||
+           (e.classCategory || '').toLowerCase().indexOf('camp') >= 0;
+  });
+
+  // Deduplicate: same student + same camp → keep only the most recent enrollment
+  // enrolledDate is an ordinal string e.g. "February 11th, 2026" — use parseOrdinalDate
+  var dedupMap = {};
+  campEnrollments.forEach(function(e) {
+    var key = (e.studentName || '') + '|' + (e.className || e.eventName || '');
+    var existing = dedupMap[key];
+    if (!existing) {
+      dedupMap[key] = e;
+    } else {
+      // Keep whichever has a deposit; if tied, keep the later enrolledDate
+      var existHasDeposit = (existing.depositAmount || 0) > 0 || (existing.amountPaid || 0) > 0;
+      var thisHasDeposit  = (e.depositAmount || 0) > 0 || (e.amountPaid || 0) > 0;
+      if (thisHasDeposit && !existHasDeposit) {
+        dedupMap[key] = e;
+      } else if (!thisHasDeposit && existHasDeposit) {
+        // keep existing
+      } else {
+        // Both or neither have deposits — keep later enrolledDate
+        var existDate = parseOrdinalDate(existing.enrolledDate) || new Date(0);
+        var thisDate  = parseOrdinalDate(e.enrolledDate)        || new Date(0);
+        if (thisDate > existDate) dedupMap[key] = e;
+      }
+    }
+  });
+
+  return Object.values(dedupMap).map(function(e) {
+    var startD = parseOrdinalDate(e.classStartDate);
+    var endD = null;
+    if (startD) {
+      var dur = getDurationDays(e.classCategory);
+      endD = new Date(startD.getTime());
+      endD.setDate(endD.getDate() + dur);
+    }
+    return Object.assign({}, e, { _campStartDate: startD, _campEndDate: endD });
+  });
+}
+
+function getCampSeason(d) {
+  if (!d || isNaN(d.getTime())) return null;
+  var mo = d.getMonth(); // 0=Jan, 5=Jun, 7=Aug
+  var yr = d.getFullYear();
+  var s = (mo >= 5 && mo <= 7) ? 'Summer' : 'AY Camps';
+  return { key: s + ' ' + yr, label: s + ' ' + yr };
+}
+
+function getWeekStart(d) {
+  // Return the Monday of the week for a given date — normalizes all students in same camp week
+  if (!d || isNaN(d.getTime())) return null;
+  var day = d.getDay(); // 0=Sun, 1=Mon
+  var diff = (day === 0) ? -6 : 1 - day; // days back to Monday
+  var mon = new Date(d.getTime());
+  mon.setDate(mon.getDate() + diff);
+  mon.setHours(0,0,0,0);
+  return mon;
+}
+
+function populateCampNameDropdown(camps, seasonKey) {
+  // Deduplicate by className + week-start (Monday)
+  // This groups all students in the same camp week into one dropdown entry
+  var nameMap = {};
+  camps.forEach(function(e) {
+    if (seasonKey) {
+      var s = getCampSeason(e._campStartDate);
+      if (!s || s.key !== seasonKey) return;
+    }
+    var name     = e.className || '';
+    var weekMon  = getWeekStart(e._campStartDate); // normalize to Monday
+    var weekKey  = weekMon ? weekMon.toISOString().split('T')[0] : (e.classStartDate || '');
+    var key      = name + '|||' + weekKey;
+
+    if (!nameMap[key]) {
+      // Use Monday as display start, Friday (Mon+4) as end for 5-day camps
+      var dispStart = weekMon || e._campStartDate;
+      var dispEnd   = e._campEndDate;
+      // If end date isn't > start (same-day camp), keep as-is
+      var label = name;
+      if (dispStart) {
+        var startFmt = dispStart.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+        label = name + ' – ' + startFmt;
+      }
+      // Filter value uses className|||weekKey so all students in that week match
+      nameMap[key] = { label: label, key: key, weekKey: weekKey, name: name };
+    }
+  });
+
+  var nmSel = document.getElementById('camps-name-filter');
+  if (nmSel) {
+    var opts = Object.values(nameMap).sort(function(a,b){
+      // Sort by weekKey (ISO date string) ascending
+      if (a.weekKey < b.weekKey) return -1;
+      if (a.weekKey > b.weekKey) return 1;
+      return a.name.localeCompare(b.name);
+    });
+    nmSel.innerHTML = '<option value="">All Camps</option>' +
+      opts.map(function(o) { return '<option value="' + o.key.replace(/"/g, '&quot;') + '">' + o.label + '</option>'; }).join('');
+  }
+}
+
+function renderCampsTable() {
+  state.sortConfig.camps = state.sortConfig.camps || { key: 'classStartDate', dir: 1 };
+
+  // Build price map from GetClassesDetailsInfo — className → price
+  if (!state._classPriceMap) {
+    state._classPriceMap = {};
+    state.classes.forEach(cl => {
+      if (!cl.className) return;
+      const price = (cl.salesPrice > 0 ? cl.salesPrice : null) || cl.price || cl.originalPrice || 0;
+      if (price > 0) state._classPriceMap[cl.className] = Number(price);
+    });
+  }
+
+  // Build full camp list ONCE and store on state
+  state._allCampRows = getCampRows();
+  var camps = state._allCampRows;
+
+  // ── Season dropdown ──────────────────────────────────────────────────────
+  var seasonMap = {};
+  camps.forEach(function(e) {
+    var s = getCampSeason(e._campStartDate);
+    if (s) seasonMap[s.key] = s.label;
+  });
+  var seasonKeys = Object.keys(seasonMap).sort(function(a, b) {
+    var aY = parseInt(a.slice(-4)), bY = parseInt(b.slice(-4));
+    if (aY !== bY) return aY - bY;
+    return a.indexOf('AY') >= 0 ? -1 : 1;
+  });
+  var yrSel = document.getElementById('camps-year-filter');
+  if (yrSel) {
+    var curSeason = getCampSeason(new Date());
+    var def = curSeason && seasonMap[curSeason.key] ? curSeason.key : '';
+    yrSel.innerHTML = '<option value="">All Seasons</option>' +
+      seasonKeys.map(function(k) { return '<option value="' + k + '">' + seasonMap[k] + '</option>'; }).join('');
+    yrSel.value = def;
+  }
+
+  // ── Camp name dropdown — filtered by currently selected season ──────────
+  var yrSelNow = document.getElementById('camps-year-filter');
+  var activeSeason = (yrSelNow ? yrSelNow.value : '') || '';
+  populateCampNameDropdown(camps, activeSeason);
+
+  // When season changes, repopulate name dropdown then refilter
+  if (yrSelNow && !yrSelNow._seasonListenerAttached) {
+    yrSelNow._seasonListenerAttached = true;
+    yrSelNow.addEventListener('change', function() {
+      var nmSel2 = document.getElementById('camps-name-filter');
+      if (nmSel2) nmSel2.value = ''; // reset name selection
+      populateCampNameDropdown(state._allCampRows || [], this.value);
+      state.pages.camps = 1;
+      applyCampFilters();
+    });
+  }
+
+  state.pages.camps = 1;
+  applyCampFilters();
+}
+
+function filterCamps() { state.pages.camps = 1; applyCampFilters(); }
+
+function sortCamps(key) {
+  var cfg = state.sortConfig.camps || { key: key, dir: 1 };
+  cfg.dir = cfg.key === key ? cfg.dir * -1 : 1;
+  cfg.key = key;
+  state.sortConfig.camps = cfg;
+  applyCampFilters();
+}
+
+function applyCampFilters() {
+  var search = ((document.getElementById('camps-search') || {}).value || '').toLowerCase();
+  var year   = ((document.getElementById('camps-year-filter') || {}).value || '');
+  var name   = ((document.getElementById('camps-name-filter') || {}).value || '');
+
+  // Always filter from the stored full list — never call getCampRows() again
+  var all = state._allCampRows || [];
+
+  var data = all.filter(function(e) {
+    // Search
+    if (search && !(
+      (e.className    || '').toLowerCase().indexOf(search) >= 0 ||
+      (e.studentName  || '').toLowerCase().indexOf(search) >= 0 ||
+      (e.contactName  || '').toLowerCase().indexOf(search) >= 0
+    )) return false;
+
+    // Season filter
+    if (year) {
+      var s = getCampSeason(e._campStartDate);
+      if (!s || s.key !== year) return false;
+    }
+
+    // Name filter — key is "className|||weekStartISO" (Monday of that week)
+    if (name) {
+      var sep2 = name.indexOf('|||');
+      var filterName2  = sep2 >= 0 ? name.substring(0, sep2) : name;
+      var filterWeek   = sep2 >= 0 ? name.substring(sep2 + 3) : '';
+      if ((e.className || '') !== filterName2) return false;
+      if (filterWeek) {
+        var eWeekMon = getWeekStart(e._campStartDate);
+        var eWeekKey = eWeekMon ? eWeekMon.toISOString().split('T')[0] : (e.classStartDate || '');
+        if (eWeekKey !== filterWeek) return false;
+      }
+    }
+
+    return true;
+  });
+
+  // Sort
+  var cfg = state.sortConfig.camps || { key: 'classStartDate', dir: 1 };
+  data.sort(function(a, b) {
+    var av = a[cfg.key] != null ? a[cfg.key] : '';
+    var bv = b[cfg.key] != null ? b[cfg.key] : '';
+    if (cfg.key === '_campStartDate' || cfg.key === 'classStartDate') {
+      var da = a._campStartDate, db = b._campStartDate;
+      if (da && db) return cfg.dir * (da - db);
+    }
+    if (typeof av === 'number') return cfg.dir * (av - bv);
+    return cfg.dir * String(av).localeCompare(String(bv));
+  });
+
+  var total = data.reduce(function(s, e) { return s + (e.amountPaid || 0); }, 0);
+  var countEl = document.getElementById('camps-count');
+  if (countEl) countEl.textContent = data.length + ' registrations · $' + fmtDollars(total) + ' revenue';
+
+  paintTable('camps-table', data, state.pages.camps, state.pageSize, campRow);
+  renderPagination('camps-pagination', 'camps');
+
+  var rc = document.getElementById('camps-row-count');
+  if (rc) rc.textContent = data.length + ' rows';
+
+  // Totals footer
+  var tfoot = document.getElementById('camps-tfoot');
+  if (tfoot) {
+    var totalCollected = data.reduce(function(s,e){ return s + (e.amountPaid||0); }, 0);
+    var totalPrice2 = data.reduce(function(s,e){
+      var p = (state._classPriceMap && state._classPriceMap[e.className]) || 0;
+      return s + p;
+    }, 0);
+    var totalBalance = Math.max(0, totalPrice2 - totalCollected);
+    tfoot.innerHTML =
+      '<tr style="background:var(--surface2);font-weight:700;border-top:2px solid var(--border)">' +
+        '<td colspan="5" style="padding:10px 14px;font-size:13px">Totals — ' + data.length + ' registrations</td>' +
+        '<td style="padding:10px 14px;text-align:right;color:var(--accent-green)">$' + fmtDollars(totalCollected) + '</td>' +
+        '<td style="padding:10px 14px;text-align:right;font-weight:700">$' + fmtDollars(totalPrice2) + '</td>' +
+        '<td></td>' +
+        '<td style="padding:10px 14px;text-align:right;color:var(--accent-yellow);font-weight:700">' + (totalBalance > 0 ? '$' + fmtDollars(totalBalance) : '<span style="color:#34d399">✓</span>') + '</td>' +
+      '</tr>';
+  }
+}
+
+
+function campRow(e) {
+  // ── Camp dates from enriched _campStartDate/_campEndDate ─────────────────
+  const startD = e._campStartDate;
+  const endD   = e._campEndDate;
+  const fmt    = d => d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  const fmtShort = d => d.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+  const campDates = startD
+    ? (endD && endD > startD
+        ? fmtShort(startD) + ' – ' + fmt(endD)
+        : fmt(startD))
+    : '—';
+
+  // ── Money fields ──────────────────────────────────────────────────────────
+  // CONFIRMED enrollment fields: amountPaid, depositAmount
+  //   depositAmount = deposit paid so far (e.g. $100)
+  //   amountPaid    = total amount paid to date (may equal full price if paid in full)
+  // totalPrice      = from GetClassesDetailsInfo via _classPriceMap (e.g. $279)
+  // Balance         = totalPrice - amountPaid  (what's still owed)
+  // Deposit display = depositAmount if > 0, else amountPaid if < totalPrice
+
+  const amountPaid  = e.amountPaid   || 0;
+  const depositAmt  = e.depositAmount || 0;
+  const totalPrice  = (state._classPriceMap && state._classPriceMap[e.className]) || 0;
+
+  // What was paid as deposit (shown in Deposit column)
+  // If depositAmount field is set use it, otherwise use amountPaid as the collected amount
+  const depositPaid = depositAmt > 0 ? depositAmt : (totalPrice > 0 && amountPaid < totalPrice ? amountPaid : 0);
+
+  // Balance = total price minus everything paid so far
+  const rawBalance = totalPrice > 0 ? Math.max(0, totalPrice - amountPaid) : 0;
+  const balance = rawBalance <= 10 ? 0 : rawBalance; // treat ≤$10 as paid in full
+
+  const paidFmt = depositPaid > 0
+    ? '<span style="color:var(--accent-green);font-weight:600">$' + fmtDollars(depositPaid) + '</span>'
+    : amountPaid > 0 && totalPrice === 0
+      ? '<span style="color:var(--accent-green);font-weight:600">$' + fmtDollars(amountPaid) + '</span>'
+      : '<span class="muted">—</span>';
+
+  const totalFmt = totalPrice > 0
+    ? '$' + fmtDollars(totalPrice)
+    : '<span class="muted">—</span>';
+
+  const balanceFmt = balance > 0
+    ? '<span style="color:var(--accent-yellow);font-weight:700">$' + fmtDollars(balance) + '</span>'
+    : amountPaid > 0
+      ? '<span style="color:var(--accent-green);font-size:12px">✓ Paid</span>'
+      : '<span class="muted">—</span>';
+
+  // Balance due date: always camp start − 14 days
+  // Highlight red if balance still owed and due date has passed
+  let balanceDueDateFmt = '—';
+  if (balance > 0 && startD) {
+    const dueD = new Date(startD.getTime());
+    dueD.setDate(dueD.getDate() - 14);
+    const dueDateStr = dueD.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    const isOverdue  = dueD < new Date();
+    balanceDueDateFmt = isOverdue
+      ? `<span style="color:#ef4444;font-weight:600">⚠ ${dueDateStr}</span>`
+      : dueDateStr;
+  }
+
+  const campName     = e.className || e.eventName || '—';
+  const purchaseDate = e.enrolledDate || '—';
+
+  return `<tr>
+    <td style="font-weight:500;max-width:180px;line-height:1.3">${campName}</td>
+    <td style="white-space:nowrap;color:var(--text-muted);font-size:12px">${campDates}</td>
+    <td style="font-weight:600">${e.studentName||'—'}</td>
+    <td style="color:var(--text-muted)">${e.contactName||'—'}</td>
+    <td style="color:var(--text-muted);white-space:nowrap;font-size:12px">${purchaseDate}</td>
+    <td style="text-align:right">${paidFmt}</td>
+    <td style="text-align:right;font-weight:600">${totalFmt}</td>
+    <td style="text-align:right;color:var(--text-muted);font-size:12px;white-space:nowrap">${balanceDueDateFmt}</td>
+    <td style="text-align:right">${balanceFmt}</td>
+  </tr>`;
+}
+
+// ─── TRANSACTIONS TABLE ───────────────────────────────────────────────────────
+function renderTransactionsTable() {
+  state.filteredTransactions = [...state.transactions];
+  state.pages.transactions = 1;
+  applyTransactionFilters();
+}
+function filterTransactions() { state.pages.transactions = 1; applyTransactionFilters(); }
+function applyTransactionFilters() {
+  const search = (document.getElementById('txn-search')?.value || '').toLowerCase();
+  const type   =  document.getElementById('txn-type-filter')?.value || '';
+  state.filteredTransactions = state.transactions.filter(t => {
+    const matchSearch = !search ||
+      (t.studentName||'').toLowerCase().includes(search) ||
+      (t.contactName||'').toLowerCase().includes(search) ||
+      (t.familyName||'').toLowerCase().includes(search) ||
+      (t.className||'').toLowerCase().includes(search);
+    const matchType = !type || (t.enrollmentTypeName||'') === type;
+    return matchSearch && matchType;
+  });
+  document.getElementById('txn-count').textContent = state.filteredTransactions.length + ' records';
+  paintTable('transactions-table', state.filteredTransactions, state.pages.transactions, state.pageSize, txnRow);
+  renderPagination('txn-pagination', 'transactions');
+}
+function txnRow(t) {
+  const isRefund  = !!t.isRefund;
+  const amount    = isRefund ? (t.refundAmount || t.amountPaid || 0) : (t.amountPaid || 0);
+  const color     = isRefund ? 'var(--accent-red)' : 'var(--accent-green)';
+  const desc      = t.className || t.eventName || t.feeName || '—';
+  const typeBadge = isRefund ? 'refund' : 'success';
+  return `<tr>
+    <td class="muted">${fmtDate(t.transactionDate)}</td>
+    <td style="font-weight:500">${t.studentName||'—'}</td>
+    <td class="muted">${t.contactName||'—'}</td>
+    <td class="muted">${desc}</td>
+    <td style="font-weight:600;color:${color}">${isRefund?'-':''}$${amount.toFixed(2)}</td>
+    <td class="muted">${t.paymentMethod||'—'}</td>
+    <td class="muted">${t.enrollmentTypeName||'—'}</td>
+    <td><span class="badge ${typeBadge}">${t.paymentTransactionTypeName||t.transactionType||'—'}</span></td>
+  </tr>`;
+}
+
+// ─── LEADS TABLE ──────────────────────────────────────────────────────────────
+function renderLeadsTable() { state.filteredLeads=[...state.leads]; state.pages.leads=1; applyLeadFilters(); }
+function filterLeads() { state.pages.leads=1; applyLeadFilters(); }
+function applyLeadFilters() {
+  const search = (document.getElementById('leads-search')?.value || '').toLowerCase();
+  const status =  document.getElementById('leads-status-filter')?.value || '';
+  state.filteredLeads = state.leads.filter(l => {
+    const matchSearch = !search ||
+      (l.firstName||'').toLowerCase().includes(search) ||
+      (l.lastName||'').toLowerCase().includes(search) ||
+      (l.email||'').toLowerCase().includes(search) ||
+      (l.leadSource||'').toLowerCase().includes(search);
+    const matchStatus = !status || (l.leadStatus||'') === status;
+    return matchSearch && matchStatus;
+  });
+  document.getElementById('leads-count').textContent = state.filteredLeads.length.toLocaleString() + ' leads';
+  paintTable('leads-table', state.filteredLeads, state.pages.leads, state.pageSize, leadRow);
+  renderPagination('leads-pagination', 'leads');
+}
+function leadRow(l) {
+  const statusCls = (l.leadStatus||'').toLowerCase() === 'open' ? 'active' :
+                    (l.leadStatus||'').toLowerCase() === 'converted' ? 'success' : 'inactive';
+  return `<tr>
+    <td style="font-weight:500">${l.firstName||''} ${l.lastName||''}</td>
+    <td class="muted">${l.email||'—'}</td>
+    <td class="muted">${l.phone||'—'}</td>
+    <td><span class="badge ${statusCls}">${l.leadStatus||'—'}</span></td>
+    <td class="muted">${l.leadSource||'—'}</td>
+    <td class="muted">${l.leadType||'—'}</td>
+    <td class="muted">${fmtDate(l.createdDate)}</td>
+  </tr>`;
+}
+function populateLeadStatusFilter() {
+  const statuses = [...new Set(state.leads.map(l=>l.leadStatus).filter(Boolean))].sort();
+  const sel = document.getElementById('leads-status-filter');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All Statuses</option>' + statuses.map(s=>`<option value="${s}">${s}</option>`).join('');
+  sel.value = cur;
+}
+
+// ─── LIFETIME VALUE ───────────────────────────────────────────────────────────
+// Built from GetTransactionHistory: studentName, amountPaid, isRefund, enrollmentTypeName
+// "Belt students" = students who have at least one enrollment with classType === "Belts"
+
+function buildLTVMap() {
+  // Build a set of student names who have/had any belt enrollment
+  const beltStudentNames = new Set();
+  state.enrollments.forEach(e => {
+    if ((e.classType || '') === 'Belts' && e.studentName) {
+      beltStudentNames.add(e.studentName);
+    }
+  });
+
+  // Aggregate all-time spend per student from transactions
+  const map = {};
+  state.transactions.forEach(t => {
+    const name = t.studentName || '—';
+    if (!map[name]) map[name] = {
+      name,
+      total: 0,
+      count: 0,
+      // Belt student = has any belt enrollment (not just a transaction type)
+      isBelt: beltStudentNames.has(name),
+    };
+    if (!t.isRefund) {
+      map[name].total += (t.amountPaid || 0);
+      map[name].count++;
+    } else {
+      map[name].total -= (t.refundAmount || t.amountPaid || 0);
+    }
+  });
+  return Object.values(map).filter(s => s.total > 0);
+}
+
+function renderLTV() {
+  const all   = buildLTVMap();
+  const belts = all.filter(s => s.isBelt);
+
+  // KPIs
+  const avgLTV     = all.length   ? all.reduce((s,x)=>s+x.total,0)   / all.length   : 0;
+  const avgBeltLTV = belts.length ? belts.reduce((s,x)=>s+x.total,0) / belts.length : 0;
+
+  const grid = document.getElementById('ltv-kpi-grid');
+  if (grid) {
+    grid.innerHTML = [
+      { label: 'Average LTV (All Students)',  value: '$' + fmtDollars(avgLTV) },
+      { label: 'Lifetime Student Count',      value: all.length.toLocaleString() },
+      { label: 'Lifetime Belt Students',      value: belts.length.toLocaleString() },
+      { label: 'Average LTV Belt Students',   value: '$' + fmtDollars(avgBeltLTV) },
+    ].map(k => `
+      <div class="kpi-card">
+        <div class="kpi-card-label">${k.label} <span class="dots">···</span></div>
+        <div class="kpi-card-value">${k.value}</div>
+      </div>`).join('');
+  }
+
+  // Store for filtering
+  state._ltvAll   = all;
+  state._ltvBelts = belts;
+
+  filterLTV();
+  filterLTVBelt();
+}
+
+function sortLTVData(data, sortVal) {
+  if (sortVal === 'desc') return [...data].sort((a,b) => b.total - a.total);
+  if (sortVal === 'asc')  return [...data].sort((a,b) => a.total - b.total);
+  return [...data].sort((a,b) => a.name.localeCompare(b.name)); // name A-Z
+}
+
+function filterLTV() {
+  const search  = (document.getElementById('ltv-search')?.value || '').toLowerCase();
+  const sortVal =  document.getElementById('ltv-sort')?.value || 'name';
+  let data = (state._ltvAll || []).filter(s =>
+    !search || s.name.toLowerCase().includes(search)
+  );
+  data = sortLTVData(data, sortVal);
+  document.getElementById('ltv-count').textContent = data.length.toLocaleString() + ' students';
+  document.getElementById('ltv-table').innerHTML = data.map(s => `
+    <tr>
+      <td style="font-weight:500">${s.name}</td>
+      <td style="text-align:right;font-weight:700;color:var(--accent-green)">$${fmtDollars(s.total)}</td>
+      <td style="text-align:center;color:var(--text-dim)">${s.count}</td>
+    </tr>`).join('') || '<tr><td colspan="3" style="text-align:center;padding:24px;color:var(--text-dim)">No data</td></tr>';
+}
+
+function filterLTVBelt() {
+  const search  = (document.getElementById('ltv-belt-search')?.value || '').toLowerCase();
+  const sortVal =  document.getElementById('ltv-belt-sort')?.value || 'desc';
+  let data = (state._ltvBelts || []).filter(s =>
+    !search || s.name.toLowerCase().includes(search)
+  );
+  data = sortLTVData(data, sortVal);
+  document.getElementById('ltv-belt-count').textContent = data.length.toLocaleString() + ' students';
+  document.getElementById('ltv-belt-table').innerHTML = data.map(s => `
+    <tr>
+      <td style="font-weight:500">${s.name}</td>
+      <td style="text-align:right;font-weight:700;color:var(--accent-green)">$${fmtDollars(s.total)}</td>
+      <td style="text-align:center;color:var(--text-dim)">${s.count}</td>
+    </tr>`).join('') || '<tr><td colspan="3" style="text-align:center;padding:24px;color:var(--text-dim)">No data</td></tr>';
+}
+
+// ─── FAMILIES TABLE ───────────────────────────────────────────────────────────
+function renderFamiliesTable() { state.filteredFamilies=[...state.families]; state.pages.families=1; applyFamilyFilters(); }
+function filterFamilies() { state.pages.families=1; applyFamilyFilters(); }
+function applyFamilyFilters() {
+  const search = document.getElementById('families-search').value.toLowerCase();
+  state.filteredFamilies = state.families.filter(f => {
+    return !search || (f.familyName||'').toLowerCase().includes(search) || (f.email||'').toLowerCase().includes(search);
+  });
+  document.getElementById('families-count').textContent = state.filteredFamilies.length + ' families';
+  paintTable('families-table', state.filteredFamilies, state.pages.families, state.pageSize, familyRow);
+  renderPagination('families-pagination', 'families');
+}
+function familyRow(f) {
+  return `<tr>
+    <td>${f.familyName||'—'}</td><td class="muted">${f.name||'—'}</td>
+    <td class="muted">${f.email||'—'}</td><td class="muted">${f.phone||'—'}</td>
+    <td class="muted">${f.city||'—'}</td><td class="muted">${f.state||'—'}</td>
+  </tr>`;
+}
+
+// ─── PAGINATION ───────────────────────────────────────────────────────────────
+function paintTable(tbodyId, data, page, pageSize, rowFn) {
+  const start = (page-1)*pageSize;
+  const slice = data.slice(start, start+pageSize);
+  document.getElementById(tbodyId).innerHTML = slice.length
+    ? slice.map(rowFn).join('')
+    : `<tr><td colspan="10" style="text-align:center;padding:28px;color:var(--text-muted)">No data available</td></tr>`;
+}
+function renderPagination(elId, key) {
+  const data = state['filtered' + key.charAt(0).toUpperCase() + key.slice(1)];
+  const total = Math.ceil(data.length / state.pageSize);
+  const cur = state.pages[key];
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (total <= 1) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <button onclick="goPage('${key}',${cur-1})" ${cur<=1?'disabled':''}>‹ Prev</button>
+    <span>Page ${cur} of ${total}</span>
+    <button onclick="goPage('${key}',${cur+1})" ${cur>=total?'disabled':''}>Next ›</button>
+  `;
+}
+function goPage(key, page) {
+  state.pages[key] = page;
+  const fns = { enrollments: applyEnrollmentFilters, transactions: applyTransactionFilters, leads: applyLeadFilters, families: applyFamilyFilters, camps: applyCampFilters, campSessions: applyCampSessionFilters };
+  fns[key]();
+}
+
+// ─── CHART HELPERS ────────────────────────────────────────────────────────────
+function destroyChart(id) {
+  if (state.charts[id]) { state.charts[id].destroy(); delete state.charts[id]; }
+}
+const chartOpts = {
+  xTick: { color: '#8b90a8', font: { size: 11 } },
+  yTick: { color: '#8b90a8', font: { size: 11 } },
+  grid: { color: 'rgba(255,255,255,0.06)' }
+};
+function renderLineChart(id, labels, data, color, label) {
+  destroyChart(id);
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  state.charts[id] = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets: [{ label, data, borderColor: color, backgroundColor: color + '15', borderWidth: 2, fill: true, tension: 0.4, pointRadius: 3 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { x: { ticks: chartOpts.xTick, grid: chartOpts.grid }, y: { ticks: chartOpts.yTick, grid: chartOpts.grid } } }
+  });
+}
+function renderBarChart(id, labels, data, color, label) {
+  destroyChart(id);
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  state.charts[id] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ label, data, backgroundColor: color + 'cc', borderRadius: 3 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { x: { ticks: chartOpts.xTick, grid: { display: false } }, y: { ticks: chartOpts.yTick, grid: chartOpts.grid } } }
+  });
+}
+function renderDoughnut(id, labels, data, colors) {
+  destroyChart(id);
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  state.charts[id] = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 4 }] },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { color: '#8b90a8', font: { size: 11 }, boxWidth: 10, padding: 8 } } } }
+  });
+}
+
+// ─── PAGE NAVIGATION ──────────────────────────────────────────────────────────
+const allPages = ['revenue','enrollments','camps','ltv','transactions','leads','families'];
+function switchPage(name) {
+  state.currentPage = name;
+  allPages.forEach(p => {
+    const el = document.getElementById('page-' + p);
+    if (el) el.classList.toggle('hidden', p !== name);
+    const nav = document.getElementById('nav-' + p);
+    if (nav) nav.classList.toggle('active', p === name);
+  });
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+function countBy(arr, fn) {
+  return arr.reduce((acc, item) => { const k = fn(item); acc[k] = (acc[k]||0)+1; return acc; }, {});
+}
+function formatMonth(str) {
+  const [y, m] = str.split('-');
+  return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m)-1] + ' ' + y;
+}
+function fmtDate(str) {
+  if (!str) return '—';
+  const d = new Date(str);
+  if (isNaN(d)) return str.substring(0,10);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function fmtDollars(n) {
+  if (!n) return '0';
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtK(v) {
+  if (Math.abs(v) >= 1000) return (v/1000).toFixed(0) + 'k';
+  return v;
+}
+function lightPalette(n) {
+  const p = ['#5b6af0','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#84cc16'];
+  return Array.from({length: n}, (_,i) => p[i % p.length]);
+}
+function setStatus(type, text) {
+  const dot = document.getElementById('status-dot');
+  dot.className = 'status-dot-sm ' + (type==='loading'?'loading':type==='error'?'error':'');
+  document.getElementById('status-text').textContent = text;
+}
+function show(id) { document.getElementById(id).classList.remove('hidden'); }
+function hide(id) { document.getElementById(id).classList.add('hidden'); }
+
+// ─── LOGIN ────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const username = document.getElementById('login-user').value.trim();
+  const password = document.getElementById('login-pass').value;
+  const remember = document.getElementById('login-remember').checked;
+  const btn = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-error');
+  if (!username || !password) { errEl.textContent = 'Please enter your email and password.'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in...'; errEl.textContent = '';
+  try {
+    const res = await fetch('/login', { method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ username, password, remember }) });
+    const data = await res.json();
+    if (data.success) { hide('login-screen'); loadAllData(); }
+    else { errEl.textContent = data.error || 'Login failed.'; btn.disabled=false; btn.textContent='Sign In'; }
+  } catch(e) {
+    errEl.textContent = 'Could not connect to server. Is node server.js running?';
+    btn.disabled=false; btn.textContent='Sign In';
+  }
+}
+document.addEventListener('keydown', e => {
+  if (e.key==='Enter' && !document.getElementById('login-screen').classList.contains('hidden')) doLogin();
+});
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+setupDates();
+loadAllData();
+document.getElementById('start-date').addEventListener('change', loadAllData);
+document.getElementById('end-date').addEventListener('change', loadAllData);
+</script>
+</body>
+</html>
