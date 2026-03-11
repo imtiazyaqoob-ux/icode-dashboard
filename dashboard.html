@@ -466,14 +466,8 @@
   </div>
 
   <div class="nav-section-label">Management</div>
-  <div class="nav-item" onclick="switchPage('transactions')" id="nav-transactions">
-    <span class="nav-icon">💳</span> Transactions
-  </div>
-  <div class="nav-item" onclick="switchPage('leads')" id="nav-leads">
-    <span class="nav-icon">🎯</span> Leads
-  </div>
-  <div class="nav-item" onclick="switchPage('families')" id="nav-families">
-    <span class="nav-icon">👨‍👩‍👧</span> Families
+  <div class="nav-item" onclick="switchPage('payments')" id="nav-payments">
+    <span class="nav-icon">📅</span> Payment Matrix
   </div>
 </nav>
 
@@ -783,135 +777,44 @@
       </div>
     </div>
 
-    <!-- ══ TRANSACTIONS PAGE ══ -->
-    <div id="page-transactions" class="hidden">
+
+    <!-- ══ PAYMENT MATRIX PAGE ══ -->
+    <div id="page-payments" class="hidden">
       <div class="page-header">
         <div>
-          <div class="page-title">Transactions</div>
-          <div class="page-subtitle">Payment history and refunds</div>
+          <div class="page-title">Payment Matrix</div>
+          <div class="page-subtitle">Monthly belt student payments — past 9 months &amp; next 9 months</div>
         </div>
       </div>
-      <div class="section-row two">
-        <div class="chart-card" style="margin-bottom:0">
-          <div class="chart-card-header">
-            <div class="chart-card-title">Monthly Revenue</div>
-            <span class="chart-card-dots">···</span>
-          </div>
-          <div class="chart-wrap h220">
-            <canvas id="revenue-chart"></canvas>
-          </div>
-        </div>
-        <div class="chart-card" style="margin-bottom:0">
-          <div class="chart-card-header">
-            <div class="chart-card-title">Payment Methods</div>
-            <span class="chart-card-dots">···</span>
-          </div>
-          <div class="chart-wrap h220">
-            <canvas id="payment-method-chart"></canvas>
-          </div>
-        </div>
-      </div>
-      <div class="table-card" style="margin-top:16px">
+
+      <div class="table-card" style="margin-top:0">
         <div class="table-card-header">
-          <div class="table-card-title">Transaction History</div>
+          <div class="table-card-title">Belt Students · Monthly Payments</div>
           <span class="chart-card-dots">···</span>
         </div>
         <div class="filter-row">
-          <input type="text" id="txn-search" placeholder="Search student, class..." oninput="filterTransactions()">
-          <select id="txn-type-filter" onchange="filterTransactions()">
-            <option value="">All Types</option>
-            <option value="Classes">Classes</option>
-            <option value="Camps">Camps</option>
-            <option value="Events">Events</option>
+          <input type="text" id="payment-matrix-search" placeholder="Search student name..." oninput="filterPaymentMatrix()">
+          <select id="payment-matrix-sort" onchange="filterPaymentMatrix()">
+            <option value="firstname">Order by First Name</option>
+            <option value="lastname">Order by Last Name</option>
+            <option value="paydate">Order by Payment Date</option>
           </select>
           <div class="filter-spacer"></div>
-          <span class="row-count" id="txn-count"></span>
+          <span class="row-count" id="payment-matrix-count"></span>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th><th>Student</th><th>Contact</th><th>Class / Event</th>
-                <th>Amount</th><th>Method</th><th>Enrollment Type</th><th>Transaction Type</th>
-              </tr>
-            </thead>
-            <tbody id="transactions-table"></tbody>
+        <div style="overflow-x:auto;width:100%">
+          <table id="payment-matrix-table" style="min-width:1200px;border-collapse:collapse;width:100%">
+            <thead id="payment-matrix-thead"></thead>
+            <tbody id="payment-matrix-tbody"></tbody>
           </table>
         </div>
-        <div class="pagination" id="txn-pagination"></div>
       </div>
-    </div>
 
-    <!-- ══ LEADS PAGE ══ -->
-    <div id="page-leads" class="hidden">
-      <div class="page-header">
-        <div>
-          <div class="page-title">Leads</div>
-          <div class="page-subtitle">Prospects and inquiries</div>
-        </div>
-      </div>
-      <div class="section-row two">
-        <div class="chart-card" style="margin-bottom:0">
-          <div class="chart-card-header">
-            <div class="chart-card-title">Leads by Status</div>
-            <span class="chart-card-dots">···</span>
-          </div>
-          <div class="chart-wrap h220"><canvas id="leads-status-chart"></canvas></div>
-        </div>
-        <div class="chart-card" style="margin-bottom:0">
-          <div class="chart-card-header">
-            <div class="chart-card-title">Leads by Source</div>
-            <span class="chart-card-dots">···</span>
-          </div>
-          <div class="chart-wrap h220"><canvas id="leads-source-chart"></canvas></div>
-        </div>
-      </div>
-      <div class="table-card" style="margin-top:16px">
-        <div class="table-card-header">
-          <div class="table-card-title">All Leads</div>
-          <span class="chart-card-dots">···</span>
-        </div>
-        <div class="filter-row">
-          <input type="text" id="leads-search" placeholder="Search name, email..." oninput="filterLeads()">
-          <select id="leads-status-filter" onchange="filterLeads()"><option value="">All Statuses</option></select>
-          <div class="filter-spacer"></div>
-          <span class="row-count" id="leads-count"></span>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Source</th><th>Type</th><th>Created</th></tr></thead>
-            <tbody id="leads-table"></tbody>
-          </table>
-        </div>
-        <div class="pagination" id="leads-pagination"></div>
-      </div>
-    </div>
-
-    <!-- ══ FAMILIES PAGE ══ -->
-    <div id="page-families" class="hidden">
-      <div class="page-header">
-        <div>
-          <div class="page-title">Families</div>
-          <div class="page-subtitle">Registered families at Glen Ellyn</div>
-        </div>
-      </div>
-      <div class="table-card">
-        <div class="table-card-header">
-          <div class="table-card-title">All Families</div>
-          <span class="chart-card-dots">···</span>
-        </div>
-        <div class="filter-row">
-          <input type="text" id="families-search" placeholder="Search family, email..." oninput="filterFamilies()">
-          <div class="filter-spacer"></div>
-          <span class="row-count" id="families-count"></span>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Family Name</th><th>Contact</th><th>Email</th><th>Phone</th><th>City</th><th>State</th></tr></thead>
-            <tbody id="families-table"></tbody>
-          </table>
-        </div>
-        <div class="pagination" id="families-pagination"></div>
+      <div style="margin-top:12px;display:flex;gap:20px;font-size:12px;color:var(--text-muted);padding:0 2px">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(52,211,153,0.25);margin-right:5px;vertical-align:middle"></span>Paid</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(96,165,250,0.2);margin-right:5px;vertical-align:middle"></span>Due date (future)</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(107,114,128,0.15);margin-right:5px;vertical-align:middle"></span>No activity</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(248,113,113,0.2);border:1px solid rgba(248,113,113,0.5);margin-right:5px;vertical-align:middle"></span>Current month (today)</span>
       </div>
     </div>
 
@@ -931,10 +834,10 @@ const FRANCHISE_ID = 67;
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 const state = {
-  enrollments: [], transactions: [], leads: [], families: [], classes: [], stats: null,
-  filteredEnrollments: [], filteredTransactions: [], filteredLeads: [], filteredFamilies: [], filteredCamps: [],
+  enrollments: [], transactions: [], families: [], classes: [], stats: null,
+  filteredEnrollments: [], filteredCamps: [],
   futurePayments: [],
-  pages: { enrollments: 1, transactions: 1, leads: 1, families: 1, camps: 1, campSessions: 1 },
+  pages: { enrollments: 1, camps: 1, campSessions: 1 },
   pageSize: 20,
   charts: {},
   sortConfig: { enrollments: { key: 'startDate', dir: -1 } },
@@ -1027,9 +930,6 @@ async function loadAllData() {
     state.stats = (statsRaw && !Array.isArray(statsRaw)) ? statsRaw : null;
     console.log('✅ Stats:', state.stats);
 
-    state.leads = await apiGet('Lead/GetLeads', { franchiseIds: FRANCHISE_ID }).catch(() => []);
-    console.log(`✅ Leads: ${state.leads.length}`);
-
     // ── PublicAPI endpoints ─────────────────────────────────────────────────
     // IMPORTANT: Always fetch 2 full years for KPI year-over-year comparisons.
     // The date picker only filters the Transactions TABLE view, not the data fetch.
@@ -1052,7 +952,7 @@ async function loadAllData() {
                              futureRes.status  === 'fulfilled' && futureRes.value?.response        ? futureRes.value.response : [];
     state.families         = [];
 
-    console.log(`📊 enrollments:${state.enrollments.length} classes:${state.classes.length} txns:${state.transactions.length} future:${state.futurePayments.length} leads:${state.leads.length}`);
+    console.log(`📊 enrollments:${state.enrollments.length} classes:${state.classes.length} txns:${state.transactions.length} future:${state.futurePayments.length}`);
     if (enrollRes.status  === 'rejected') console.warn('Enrollments failed:',     enrollRes.reason?.message);
     if (classRes.status   === 'rejected') console.warn('Classes failed:',         classRes.reason?.message);
     if (txnRes.status     === 'rejected') console.warn('Transactions failed:',    txnRes.reason?.message);
@@ -1090,17 +990,13 @@ function renderDashboard() {
   safeRun('renderCampRevenueChart',    renderCampRevenueChart);
   safeRun('renderEnrollmentCharts',    renderEnrollmentCharts);
   safeRun('renderTransactionCharts',   renderTransactionCharts);
-  safeRun('renderLeadCharts',          renderLeadCharts);
   safeRun('renderEnrollmentsTable',    renderEnrollmentsTable);
-  safeRun('renderTransactionsTable',   renderTransactionsTable);
-  safeRun('renderLeadsTable',          renderLeadsTable);
-  safeRun('renderFamiliesTable',       renderFamiliesTable);
-  safeRun('populateLeadStatusFilter',  populateLeadStatusFilter);
   safeRun('populateTxnTypeFilter',     populateTxnTypeFilter);
   safeRun('populateEnrollStatusFilter',populateEnrollStatusFilter);
   safeRun('renderCampsTable',          renderCampsTable);
   safeRun('renderCampSessions',        renderCampSessions);
   safeRun('renderLTV',                 renderLTV);
+  safeRun('renderPaymentMatrix',       renderPaymentMatrix);
 }
 
 function populateTxnTypeFilter() {
@@ -1625,13 +1521,6 @@ function renderTransactionCharts() {
   if (methodKeys.length) renderDoughnut('txn-status-chart', methodKeys, methodKeys.map(k=>byMethod[k]), lightPalette(methodKeys.length));
 }
 
-function renderLeadCharts() {
-  if (!state.leads.length) return;
-  const sc = countBy(state.leads.filter(l => l.status), l => l.status);
-  renderDoughnut('leads-status-chart', Object.keys(sc), Object.values(sc), lightPalette(Object.keys(sc).length));
-  const src = countBy(state.leads.filter(l => l.source), l => l.source);
-  renderDoughnut('leads-source-chart', Object.keys(src), Object.values(src), lightPalette(Object.keys(src).length));
-}
 
 // ─── ENROLLMENTS TABLE ────────────────────────────────────────────────────────
 function renderEnrollmentsTable() {
@@ -2512,87 +2401,6 @@ function campRow(e) {
   </tr>`;
 }
 
-// ─── TRANSACTIONS TABLE ───────────────────────────────────────────────────────
-function renderTransactionsTable() {
-  state.filteredTransactions = [...state.transactions];
-  state.pages.transactions = 1;
-  applyTransactionFilters();
-}
-function filterTransactions() { state.pages.transactions = 1; applyTransactionFilters(); }
-function applyTransactionFilters() {
-  const search = (document.getElementById('txn-search')?.value || '').toLowerCase();
-  const type   =  document.getElementById('txn-type-filter')?.value || '';
-  state.filteredTransactions = state.transactions.filter(t => {
-    const matchSearch = !search ||
-      (t.studentName||'').toLowerCase().includes(search) ||
-      (t.contactName||'').toLowerCase().includes(search) ||
-      (t.familyName||'').toLowerCase().includes(search) ||
-      (t.className||'').toLowerCase().includes(search);
-    const matchType = !type || (t.enrollmentTypeName||'') === type;
-    return matchSearch && matchType;
-  });
-  document.getElementById('txn-count').textContent = state.filteredTransactions.length + ' records';
-  paintTable('transactions-table', state.filteredTransactions, state.pages.transactions, state.pageSize, txnRow);
-  renderPagination('txn-pagination', 'transactions');
-}
-function txnRow(t) {
-  const isRefund  = !!t.isRefund;
-  const amount    = isRefund ? (t.refundAmount || t.amountPaid || 0) : (t.amountPaid || 0);
-  const color     = isRefund ? 'var(--accent-red)' : 'var(--accent-green)';
-  const desc      = t.className || t.eventName || t.feeName || '—';
-  const typeBadge = isRefund ? 'refund' : 'success';
-  return `<tr>
-    <td class="muted">${fmtDate(t.transactionDate)}</td>
-    <td style="font-weight:500">${t.studentName||'—'}</td>
-    <td class="muted">${t.contactName||'—'}</td>
-    <td class="muted">${desc}</td>
-    <td style="font-weight:600;color:${color}">${isRefund?'-':''}$${amount.toFixed(2)}</td>
-    <td class="muted">${t.paymentMethod||'—'}</td>
-    <td class="muted">${t.enrollmentTypeName||'—'}</td>
-    <td><span class="badge ${typeBadge}">${t.paymentTransactionTypeName||t.transactionType||'—'}</span></td>
-  </tr>`;
-}
-
-// ─── LEADS TABLE ──────────────────────────────────────────────────────────────
-function renderLeadsTable() { state.filteredLeads=[...state.leads]; state.pages.leads=1; applyLeadFilters(); }
-function filterLeads() { state.pages.leads=1; applyLeadFilters(); }
-function applyLeadFilters() {
-  const search = (document.getElementById('leads-search')?.value || '').toLowerCase();
-  const status =  document.getElementById('leads-status-filter')?.value || '';
-  state.filteredLeads = state.leads.filter(l => {
-    const matchSearch = !search ||
-      (l.firstName||'').toLowerCase().includes(search) ||
-      (l.lastName||'').toLowerCase().includes(search) ||
-      (l.email||'').toLowerCase().includes(search) ||
-      (l.leadSource||'').toLowerCase().includes(search);
-    const matchStatus = !status || (l.leadStatus||'') === status;
-    return matchSearch && matchStatus;
-  });
-  document.getElementById('leads-count').textContent = state.filteredLeads.length.toLocaleString() + ' leads';
-  paintTable('leads-table', state.filteredLeads, state.pages.leads, state.pageSize, leadRow);
-  renderPagination('leads-pagination', 'leads');
-}
-function leadRow(l) {
-  const statusCls = (l.leadStatus||'').toLowerCase() === 'open' ? 'active' :
-                    (l.leadStatus||'').toLowerCase() === 'converted' ? 'success' : 'inactive';
-  return `<tr>
-    <td style="font-weight:500">${l.firstName||''} ${l.lastName||''}</td>
-    <td class="muted">${l.email||'—'}</td>
-    <td class="muted">${l.phone||'—'}</td>
-    <td><span class="badge ${statusCls}">${l.leadStatus||'—'}</span></td>
-    <td class="muted">${l.leadSource||'—'}</td>
-    <td class="muted">${l.leadType||'—'}</td>
-    <td class="muted">${fmtDate(l.createdDate)}</td>
-  </tr>`;
-}
-function populateLeadStatusFilter() {
-  const statuses = [...new Set(state.leads.map(l=>l.leadStatus).filter(Boolean))].sort();
-  const sel = document.getElementById('leads-status-filter');
-  if (!sel) return;
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">All Statuses</option>' + statuses.map(s=>`<option value="${s}">${s}</option>`).join('');
-  sel.value = cur;
-}
 
 // ─── LIFETIME VALUE ───────────────────────────────────────────────────────────
 // Built from GetTransactionHistory: studentName, amountPaid, isRefund, enrollmentTypeName
@@ -2696,25 +2504,256 @@ function filterLTVBelt() {
     </tr>`).join('') || '<tr><td colspan="3" style="text-align:center;padding:24px;color:var(--text-dim)">No data</td></tr>';
 }
 
-// ─── FAMILIES TABLE ───────────────────────────────────────────────────────────
-function renderFamiliesTable() { state.filteredFamilies=[...state.families]; state.pages.families=1; applyFamilyFilters(); }
-function filterFamilies() { state.pages.families=1; applyFamilyFilters(); }
-function applyFamilyFilters() {
-  const search = document.getElementById('families-search').value.toLowerCase();
-  state.filteredFamilies = state.families.filter(f => {
-    return !search || (f.familyName||'').toLowerCase().includes(search) || (f.email||'').toLowerCase().includes(search);
+// ─── PAYMENT MATRIX ───────────────────────────────────────────────────────────
+function renderPaymentMatrix() {
+  state._paymentMatrixAllRows = buildPaymentMatrixRows();
+  filterPaymentMatrix();
+}
+
+function filterPaymentMatrix() {
+  const search  = (document.getElementById('payment-matrix-search')?.value || '').toLowerCase();
+  const sortBy  =  document.getElementById('payment-matrix-sort')?.value || 'firstname';
+  let rows = (state._paymentMatrixAllRows || []).filter(r =>
+    !search || r.studentName.toLowerCase().includes(search)
+  );
+
+  if (sortBy === 'firstname') {
+    rows.sort((a, b) => {
+      const af = a.studentName.trim().split(' ')[0].toLowerCase();
+      const bf = b.studentName.trim().split(' ')[0].toLowerCase();
+      return af.localeCompare(bf);
+    });
+  } else if (sortBy === 'lastname') {
+    rows.sort((a, b) => {
+      const parts = n => n.trim().split(' ');
+      const al = parts(a.studentName).slice(-1)[0].toLowerCase();
+      const bl = parts(b.studentName).slice(-1)[0].toLowerCase();
+      return al.localeCompare(bl);
+    });
+  } else if (sortBy === 'paydate') {
+    // Sort by the day-of-month of their typical payment (derived from most recent paid cell)
+    rows.sort((a, b) => (a.payDay ?? 999) - (b.payDay ?? 999));
+  }
+
+  document.getElementById('payment-matrix-count').textContent = rows.length + ' students';
+  paintPaymentMatrix(rows);
+}
+
+function buildPaymentMatrixRows() {
+  const now = new Date();
+  const curYear  = now.getFullYear();
+  const curMonth = now.getMonth(); // 0-indexed
+
+  // Build 19 month columns: past 9 + current + next 9
+  const months = [];
+  for (let i = -9; i <= 9; i++) {
+    let y = curYear, m = curMonth + i;
+    while (m < 0)  { m += 12; y--; }
+    while (m > 11) { m -= 12; y++; }
+    months.push({ year: y, month: m, isCurrent: i === 0 });
+  }
+
+  // Active belt students = students who have pending future belt payments
+  // This is the same source of truth as the Belts tab slot counts (GetFutureRecurringPayments)
+  // futurePayments structure: { userName, className, recurringType, intervals: [...] }
+  const beltStudentNames = new Set();
+  (state.futurePayments || []).forEach(p => {
+    const name = p.userName || '';
+    if (!name) return;
+    // Only belt enrollments (recurringType or className indicates belts)
+    const cls = (p.className || '').toLowerCase();
+    const rt  = (p.recurringType || '').toLowerCase();
+    const isBelt = rt.includes('belt') || cls.includes('belt') ||
+                   ['foundation','gray','yellow','orange','blue','purple','red','brown','black']
+                     .some(b => cls.includes(b));
+    if (!isBelt) return;
+    // Must have at least one pending interval
+    const hasPending = (p.intervals || []).some(iv =>
+      (iv.paymentStatus || '').toLowerCase() === 'pending'
+    );
+    if (hasPending) beltStudentNames.add(name);
   });
-  document.getElementById('families-count').textContent = state.filteredFamilies.length + ' families';
-  paintTable('families-table', state.filteredFamilies, state.pages.families, state.pageSize, familyRow);
-  renderPagination('families-pagination', 'families');
+
+  // Build map: studentName → { year-month → totalPaid }
+  const paidMap = {}; // key: "studentName|||YYYY-M"
+  state.transactions.forEach(t => {
+    const name = t.studentName || '';
+    if (!name || !beltStudentNames.has(name)) return;
+    if (t.isRefund) return;
+    const dateStr = t.transactionDate;
+    if (!dateStr) return;
+    const d = new Date(dateStr);
+    if (isNaN(d)) return;
+    const key = name + '|||' + d.getFullYear() + '-' + d.getMonth();
+    paidMap[key] = (paidMap[key] || 0) + (t.amountPaid || 0);
+  });
+
+  // Build future payment map: studentName → { year-month → earliest dueDate string }
+  // Uses GetFutureRecurringPayments (state.futurePayments)
+  // Structure: { userName, className, intervals: [{ dueDate, pendingAmount, paymentStatus }] }
+  const futureMap = {}; // key: "studentName|||YYYY-M" → earliest dueDate in that month
+  (state.futurePayments || []).forEach(p => {
+    const name = p.userName || '';
+    if (!name || !beltStudentNames.has(name)) return;
+    (p.intervals || []).forEach(iv => {
+      if ((iv.paymentStatus || '').toLowerCase() !== 'pending') return;
+      const d = new Date(iv.dueDate);
+      if (isNaN(d)) return;
+      const key = name + '|||' + d.getFullYear() + '-' + d.getMonth();
+      // Keep the earliest due date in each month
+      if (!futureMap[key] || d < new Date(futureMap[key])) {
+        futureMap[key] = iv.dueDate;
+      }
+    });
+  });
+
+  // Build one row per active belt student, sorted by name
+  const students = [...beltStudentNames].sort((a, b) => a.localeCompare(b));
+
+  return students.map(name => {
+    const cells = months.map(({ year, month, isCurrent }) => {
+      const mk = name + '|||' + year + '-' + month;
+      const paid = paidMap[mk] || 0;
+      const futureDate = futureMap[mk] || null;
+
+      if (paid > 0) {
+        return { type: 'paid', value: '$' + fmtDollars(paid), isCurrent };
+      }
+      if (isCurrent && futureDate) {
+        const d = new Date(futureDate);
+        const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        return { type: 'due', value: label, isCurrent };
+      }
+      if (!isCurrent && futureDate) {
+        const d = new Date(futureDate);
+        if (d.getFullYear() === year && d.getMonth() === month) {
+          const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          return { type: 'due', value: label, isCurrent: false };
+        }
+      }
+      return { type: 'empty', value: '—', isCurrent };
+    });
+
+    // Determine payDay for sort: use earliest upcoming future due date day,
+    // falling back to most recently paid transaction day-of-month
+    let payDay = null;
+
+    // 1. Use the soonest upcoming future payment
+    const upcoming = Object.entries(futureMap)
+      .filter(([k]) => k.startsWith(name + '|||'))
+      .map(([, v]) => new Date(v))
+      .filter(d => !isNaN(d) && d >= now)
+      .sort((a, b) => a - b);
+    if (upcoming.length) {
+      payDay = upcoming[0].getDate();
+    } else {
+      // 2. Fallback: most recent paid transaction day
+      const txDays = state.transactions
+        .filter(t => t.studentName === name && !t.isRefund && t.transactionDate)
+        .map(t => new Date(t.transactionDate))
+        .filter(d => !isNaN(d))
+        .sort((a, b) => b - a);
+      if (txDays.length) payDay = txDays[0].getDate();
+    }
+
+    return { studentName: name, cells, payDay };
+  });
 }
-function familyRow(f) {
-  return `<tr>
-    <td>${f.familyName||'—'}</td><td class="muted">${f.name||'—'}</td>
-    <td class="muted">${f.email||'—'}</td><td class="muted">${f.phone||'—'}</td>
-    <td class="muted">${f.city||'—'}</td><td class="muted">${f.state||'—'}</td>
+
+function paintPaymentMatrix(rows) {
+  const now = new Date();
+  const curYear  = now.getFullYear();
+  const curMonth = now.getMonth();
+
+  const months = [];
+  for (let i = -9; i <= 9; i++) {
+    let y = curYear, m = curMonth + i;
+    while (m < 0)  { m += 12; y--; }
+    while (m > 11) { m -= 12; y++; }
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    months.push({
+      label: monthNames[m] + ' ' + String(y).slice(2),
+      isCurrent: i === 0,
+      isPast: i < 0,
+      isFuture: i > 0,
+    });
+  }
+
+  // Header
+  const thead = document.getElementById('payment-matrix-thead');
+  thead.innerHTML = `<tr>
+    <th style="
+      position:sticky;left:0;z-index:2;
+      background:var(--surface);
+      text-align:left;padding:10px 14px;
+      font-size:12px;font-weight:600;color:var(--text-muted);
+      border-bottom:1px solid var(--border);
+      border-right:1px solid var(--border);
+      min-width:160px;white-space:nowrap;
+    ">Student</th>
+    ${months.map(mo => `
+      <th style="
+        padding:10px 8px;
+        font-size:11px;font-weight:600;
+        color:${mo.isCurrent ? 'var(--accent)' : mo.isPast ? 'var(--text-muted)' : 'var(--text-dim)'};
+        border-bottom:1px solid var(--border);
+        text-align:center;min-width:80px;white-space:nowrap;
+        ${mo.isCurrent ? 'background:rgba(108,126,247,0.08);' : ''}
+      ">${mo.label}${mo.isCurrent ? '<br><span style="font-size:9px;font-weight:400;opacity:0.7">current</span>' : ''}</th>
+    `).join('')}
   </tr>`;
+
+  // Body
+  const tbody = document.getElementById('payment-matrix-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="${months.length + 1}" style="text-align:center;padding:32px;color:var(--text-dim)">No belt students found</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map((row, ri) => {
+    const rowBg = ri % 2 === 0 ? 'var(--surface)' : 'var(--surface2)';
+    return `<tr style="background:${rowBg}">
+      <td style="
+        position:sticky;left:0;z-index:1;
+        background:${rowBg};
+        padding:8px 14px;font-size:13px;font-weight:500;
+        border-right:1px solid var(--border);
+        border-bottom:1px solid var(--border-light);
+        white-space:nowrap;
+      ">${row.studentName}</td>
+      ${row.cells.map(cell => {
+        let bg = 'transparent';
+        let color = 'var(--text-dim)';
+        let fw = '400';
+        let border = '';
+        if (cell.type === 'paid') {
+          bg = 'rgba(52,211,153,0.12)';
+          color = 'var(--accent-green)';
+          fw = '600';
+        } else if (cell.type === 'due') {
+          bg = 'rgba(96,165,250,0.10)';
+          color = 'var(--accent-blue)';
+          fw = '500';
+        }
+        if (cell.isCurrent) {
+          border = 'box-shadow:inset 0 0 0 1px rgba(248,113,113,0.4);';
+          if (cell.type === 'empty') bg = 'rgba(248,113,113,0.06)';
+        }
+        return `<td style="
+          padding:8px 6px;
+          text-align:center;
+          font-size:12px;
+          font-weight:${fw};
+          color:${color};
+          background:${bg};
+          ${border}
+          border-bottom:1px solid var(--border-light);
+        ">${cell.value}</td>`;
+      }).join('')}
+    </tr>`;
+  }).join('');
 }
+
 
 // ─── PAGINATION ───────────────────────────────────────────────────────────────
 function paintTable(tbodyId, data, page, pageSize, rowFn) {
@@ -2739,7 +2778,7 @@ function renderPagination(elId, key) {
 }
 function goPage(key, page) {
   state.pages[key] = page;
-  const fns = { enrollments: applyEnrollmentFilters, transactions: applyTransactionFilters, leads: applyLeadFilters, families: applyFamilyFilters, camps: applyCampFilters, campSessions: applyCampSessionFilters };
+  const fns = { enrollments: applyEnrollmentFilters, camps: applyCampFilters, campSessions: applyCampSessionFilters };
   fns[key]();
 }
 
@@ -2787,7 +2826,7 @@ function renderDoughnut(id, labels, data, colors) {
 }
 
 // ─── PAGE NAVIGATION ──────────────────────────────────────────────────────────
-const allPages = ['revenue','enrollments','camps','ltv','transactions','leads','families'];
+const allPages = ['revenue','enrollments','camps','ltv','payments'];
 function switchPage(name) {
   state.currentPage = name;
   allPages.forEach(p => {
