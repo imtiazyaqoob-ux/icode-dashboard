@@ -6,6 +6,7 @@
 <title>iCode Glen Ellyn — Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
     --bg: #0f1117;
@@ -679,6 +680,7 @@
             <option value="">All Camps</option>
           </select>
           <div class="filter-spacer"></div>
+          <button onclick="exportCampsXLSX()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">⬇ Export .xlsx</button>
           <span class="row-count" id="camps-count"></span>
         </div>
         <div class="table-wrap">
@@ -2324,6 +2326,61 @@ function applyCampFilters() {
   }
 }
 
+
+function exportCampsXLSX() {
+  var rows = state.filteredCamps || [];
+  if (!rows.length) { alert('No camp data to export.'); return; }
+
+  var fmt = function(d) {
+    if (!d) return '';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  var data = rows.map(function(e) {
+    var startD     = e._campStartDate;
+    var endD       = e._campEndDate;
+    var campDates  = startD ? (endD && endD > startD ? fmt(startD) + ' – ' + fmt(endD) : fmt(startD)) : '';
+    var amountPaid = e.amountPaid  || 0;
+    var depositAmt = e.depositAmount || 0;
+    var totalPrice = (state._classPriceMap && state._classPriceMap[e.className]) || 0;
+    var depositPaid = depositAmt > 0 ? depositAmt : (totalPrice > 0 && amountPaid < totalPrice ? amountPaid : 0);
+    var rawBalance  = totalPrice > 0 ? Math.max(0, totalPrice - amountPaid) : 0;
+    var balance     = rawBalance <= 10 ? 0 : rawBalance;
+    var balanceDueDate = '';
+    if (balance > 0 && startD) {
+      var dueD = new Date(startD.getTime());
+      dueD.setDate(dueD.getDate() - 14);
+      balanceDueDate = fmt(dueD);
+    }
+    return {
+      'Camp Name':       e.className || e.eventName || '',
+      'Camp Dates':      campDates,
+      'Student':         e.studentName || '',
+      'Parent':          e.contactName || '',
+      'Purchase Date':   e.enrolledDate || '',
+      'Deposit ($)':     depositPaid > 0 ? depositPaid : (amountPaid > 0 && totalPrice === 0 ? amountPaid : 0),
+      'Total Price ($)': totalPrice || '',
+      'Balance Due Date': balanceDueDate,
+      'Balance Due ($)': balance > 0 ? balance : (amountPaid > 0 ? 'Paid' : ''),
+      'Notes':           e.notes || ''
+    };
+  });
+
+  var ws   = XLSX.utils.json_to_sheet(data);
+  var wb   = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Camp Registrations');
+
+  // Auto-width columns
+  var cols = Object.keys(data[0]).map(function(k) {
+    var max = k.length;
+    data.forEach(function(r) { var v = String(r[k] || ''); if (v.length > max) max = v.length; });
+    return { wch: Math.min(max + 2, 40) };
+  });
+  ws['!cols'] = cols;
+
+  var today = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, 'icode-camps-' + today + '.xlsx');
+}
 
 function campRow(e) {
   // ── Camp dates from enriched _campStartDate/_campEndDate ─────────────────
