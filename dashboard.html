@@ -2297,6 +2297,7 @@ function applyCampFilters() {
   var countEl = document.getElementById('camps-count');
   if (countEl) countEl.textContent = data.length + ' registrations · $' + fmtDollars(total) + ' revenue';
 
+  state.filteredCamps = data;
   paintTable('camps-table', data, state.pages.camps, state.pageSize, campRow);
   renderPagination('camps-pagination', 'camps');
 
