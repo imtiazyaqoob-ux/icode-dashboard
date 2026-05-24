@@ -940,26 +940,44 @@ async function loadAllData() {
     const fetchStart = (thisYear - 1) + '-01-01';   // Jan 1 last year
     const fetchEnd   = (thisYear + 1) + '-12-31';   // Dec 31 next year (catch scheduled)
 
-    const [enrollRes, classRes, txnRes, futureRes] = await Promise.allSettled([
+    const [enrollRes, classRes, txnRes] = await Promise.allSettled([
       pubGet('PublicAPI/GetAllStudentEnrollments', { enrollmentType: 0 }),
       pubGet('PublicAPI/GetClassesDetailsInfo', { CampusId: FRANCHISE_ID }),
       pubGet('PublicAPI/GetTransactionHistory', { franchiseIds: FRANCHISE_ID, startDate: fetchStart, endDate: fetchEnd }),
-      pubGet('PublicAPI/GetFutureRecurringPayments', { companyId: FRANCHISE_ID }),
     ]);
 
     state.enrollments      = enrollRes.status  === 'fulfilled' && Array.isArray(enrollRes.value)  ? enrollRes.value  : [];
     state.classes          = classRes.status   === 'fulfilled' && Array.isArray(classRes.value)   ? classRes.value   : [];
     state.transactions     = txnRes.status     === 'fulfilled' && Array.isArray(txnRes.value)     ? txnRes.value     : [];
-    state.futurePayments   = futureRes.status  === 'fulfilled' && Array.isArray(futureRes.value)  ? futureRes.value  :
-                             futureRes.status  === 'fulfilled' && futureRes.value?.response        ? futureRes.value.response : [];
     state.families         = [];
+
+    // Paginate GetFutureRecurringPayments — API defaults to 30 records per page
+    state.futurePayments = [];
+    try {
+      const PAGE_SIZE = 100;
+      let pageNo = 1;
+      while (true) {
+        const page = await pubGet('PublicAPI/GetFutureRecurringPayments', {
+          companyId: FRANCHISE_ID,
+          noOfRecords: PAGE_SIZE,
+          pageNo: pageNo,
+        });
+        const records = Array.isArray(page) ? page : [];
+        state.futurePayments = state.futurePayments.concat(records);
+        console.log(`🔮 Future payments page ${pageNo}: ${records.length} records (total so far: ${state.futurePayments.length})`);
+        if (records.length < PAGE_SIZE) break; // last page
+        pageNo++;
+        if (pageNo > 20) { console.warn('⚠️ Hit 20-page safety limit for future payments'); break; }
+      }
+    } catch (futureErr) {
+      console.warn('Future payments failed:', futureErr.message);
+    }
 
     console.log(`📊 enrollments:${state.enrollments.length} classes:${state.classes.length} txns:${state.transactions.length} future:${state.futurePayments.length}`);
     if (enrollRes.status  === 'rejected') console.warn('Enrollments failed:',     enrollRes.reason?.message);
     if (classRes.status   === 'rejected') console.warn('Classes failed:',         classRes.reason?.message);
     if (txnRes.status     === 'rejected') console.warn('Transactions failed:',    txnRes.reason?.message);
-    if (futureRes.status  === 'rejected') console.warn('Future payments failed:', futureRes.reason?.message);
-    else console.log('🔮 Future[0]:', JSON.stringify((state.futurePayments||[])[0]).substring(0, 400));
+    if (state.futurePayments.length > 0) console.log('🔮 Future[0]:', JSON.stringify(state.futurePayments[0]).substring(0, 400));
     if (state.transactions.length > 0) console.log('🔍 Txn[0]:', JSON.stringify(state.transactions[0]).substring(0, 500));
     if (state.enrollments.length > 0) console.log('🔍 Enroll[0]:', JSON.stringify(state.enrollments[0]).substring(0, 500));
     if (state.classes.length > 0) console.log('🔍 Class[0]:', JSON.stringify(state.classes[0]).substring(0, 300));
