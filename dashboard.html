@@ -940,44 +940,26 @@ async function loadAllData() {
     const fetchStart = (thisYear - 1) + '-01-01';   // Jan 1 last year
     const fetchEnd   = (thisYear + 1) + '-12-31';   // Dec 31 next year (catch scheduled)
 
-    const [enrollRes, classRes, txnRes] = await Promise.allSettled([
+    const [enrollRes, classRes, txnRes, futureRes] = await Promise.allSettled([
       pubGet('PublicAPI/GetAllStudentEnrollments', { enrollmentType: 0 }),
       pubGet('PublicAPI/GetClassesDetailsInfo', { CampusId: FRANCHISE_ID }),
       pubGet('PublicAPI/GetTransactionHistory', { franchiseIds: FRANCHISE_ID, startDate: fetchStart, endDate: fetchEnd }),
+      pubGet('PublicAPI/GetFutureRecurringPayments', { companyId: FRANCHISE_ID }),
     ]);
 
     state.enrollments      = enrollRes.status  === 'fulfilled' && Array.isArray(enrollRes.value)  ? enrollRes.value  : [];
     state.classes          = classRes.status   === 'fulfilled' && Array.isArray(classRes.value)   ? classRes.value   : [];
     state.transactions     = txnRes.status     === 'fulfilled' && Array.isArray(txnRes.value)     ? txnRes.value     : [];
+    state.futurePayments   = futureRes.status  === 'fulfilled' && Array.isArray(futureRes.value)  ? futureRes.value  :
+                             futureRes.status  === 'fulfilled' && futureRes.value?.response        ? futureRes.value.response : [];
     state.families         = [];
-
-    // Paginate GetFutureRecurringPayments — API defaults to 30 records per page
-    state.futurePayments = [];
-    try {
-      const PAGE_SIZE = 100;
-      let pageNo = 1;
-      while (true) {
-        const page = await pubGet('PublicAPI/GetFutureRecurringPayments', {
-          companyId: FRANCHISE_ID,
-          noOfRecords: PAGE_SIZE,
-          pageNo: pageNo,
-        });
-        const records = Array.isArray(page) ? page : [];
-        state.futurePayments = state.futurePayments.concat(records);
-        console.log(`🔮 Future payments page ${pageNo}: ${records.length} records (total so far: ${state.futurePayments.length})`);
-        if (records.length < PAGE_SIZE) break; // last page
-        pageNo++;
-        if (pageNo > 20) { console.warn('⚠️ Hit 20-page safety limit for future payments'); break; }
-      }
-    } catch (futureErr) {
-      console.warn('Future payments failed:', futureErr.message);
-    }
 
     console.log(`📊 enrollments:${state.enrollments.length} classes:${state.classes.length} txns:${state.transactions.length} future:${state.futurePayments.length}`);
     if (enrollRes.status  === 'rejected') console.warn('Enrollments failed:',     enrollRes.reason?.message);
     if (classRes.status   === 'rejected') console.warn('Classes failed:',         classRes.reason?.message);
     if (txnRes.status     === 'rejected') console.warn('Transactions failed:',    txnRes.reason?.message);
-    if (state.futurePayments.length > 0) console.log('🔮 Future[0]:', JSON.stringify(state.futurePayments[0]).substring(0, 400));
+    if (futureRes.status  === 'rejected') console.warn('Future payments failed:', futureRes.reason?.message);
+    else console.log('🔮 Future[0]:', JSON.stringify((state.futurePayments||[])[0]).substring(0, 400));
     if (state.transactions.length > 0) console.log('🔍 Txn[0]:', JSON.stringify(state.transactions[0]).substring(0, 500));
     if (state.enrollments.length > 0) console.log('🔍 Enroll[0]:', JSON.stringify(state.enrollments[0]).substring(0, 500));
     if (state.classes.length > 0) console.log('🔍 Class[0]:', JSON.stringify(state.classes[0]).substring(0, 300));
@@ -2629,25 +2611,48 @@ function buildPaymentMatrixRows() {
     months.push({ year: y, month: m, isCurrent: i === 0 });
   }
 
-  // Active belt students = students who have pending future belt payments
-  // This is the same source of truth as the Belts tab slot counts (GetFutureRecurringPayments)
-  // futurePayments structure: { userName, className, recurringType, intervals: [...] }
+  // Active belt students = anyone who:
+  //   (a) has a pending future belt payment, OR
+  //   (b) made a belt-related transaction this calendar month
+  // This catches students who are paid up (no pending intervals) but still active.
   const beltStudentNames = new Set();
+  const studentClassMap = {};
+
+  // (a) from futurePayments — has pending interval in a belt enrollment
   (state.futurePayments || []).forEach(p => {
-    const name = p.userName || '';
+    const name = (p.userName || '').trim();
     if (!name) return;
-    // Only belt enrollments (recurringType or className indicates belts)
     const cls = (p.className || '').toLowerCase();
     const rt  = (p.recurringType || '').toLowerCase();
     const isBelt = rt.includes('belt') || cls.includes('belt') ||
-                   ['foundation','gray','yellow','orange','blue','purple','red','brown','black']
-                     .some(b => cls.includes(b));
+      ['foundation','gray','yellow','orange','blue','purple','red','brown','black']
+        .some(b => cls.includes(b));
     if (!isBelt) return;
-    // Must have at least one pending interval
     const hasPending = (p.intervals || []).some(iv =>
       (iv.paymentStatus || '').toLowerCase() === 'pending'
     );
-    if (hasPending) beltStudentNames.add(name);
+    if (!hasPending) return;
+    beltStudentNames.add(name);
+    if (!studentClassMap[name]) studentClassMap[name] = (p.className || '').trim();
+  });
+
+  // (b) from transactions — paid this month in a belt enrollment
+  (state.transactions || []).forEach(t => {
+    if (t.isRefund) return;
+    const name = (t.studentName || '').trim();
+    if (!name) return;
+    // Must be belt-type transaction
+    const etype = (t.enrollmentTypeName || '').toLowerCase();
+    const cname = (t.className || t.courseName || '').toLowerCase();
+    const isBelt = etype.includes('belt') || cname.includes('belt') ||
+      ['foundation','gray','yellow','orange','blue','purple','red','brown','black']
+        .some(b => cname.includes(b));
+    if (!isBelt) return;
+    const d = new Date(t.transactionDate);
+    if (isNaN(d)) return;
+    if (d.getFullYear() !== curYear || d.getMonth() !== curMonth) return;
+    beltStudentNames.add(name);
+    if (!studentClassMap[name]) studentClassMap[name] = (t.className || t.courseName || '').trim();
   });
 
   // Build map: studentName → { year-month → totalPaid }
